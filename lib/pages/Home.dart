@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/screens/Notifications.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -72,6 +73,49 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        centerTitle: true,
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary, // Set icon color
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications),
+            tooltip: 'Notifications',
+            onPressed: () {
+              Navigator.of(context).push(
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) =>
+                      const Notifications(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                        const begin = Offset(1.0, 0.0); // Slide from right
+                        const end = Offset.zero;
+                        const curve = Curves.easeInOut;
+
+                        final tween = Tween(
+                          begin: begin,
+                          end: end,
+                        ).chain(CurveTween(curve: curve));
+
+                        return SlideTransition(
+                          position: animation.drive(tween),
+                          child: child,
+                        );
+                      },
+                ),
+              );
+            },
+          ),
+        ],
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Image.asset('assets/logo.png', fit: BoxFit.contain, height: 20),
+      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -96,12 +140,12 @@ class _HomeState extends State<Home> {
                 bottom: 18,
                 left: 18,
                 child: SizedBox(
-                  width: 180,
+                  width: 210,
                   child: Text(
                     "first-ever landport in the country",
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -118,21 +162,31 @@ class _HomeState extends State<Home> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 55,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        item['icon'],
-                        color: Theme.of(context).colorScheme.onPrimary,
-                        size: 25,
+                  InkWell(
+                    onTap: () {
+                      // Handle tap on menu item
+                      print("Tapped on ${item['label']}");
+                    },
+                    borderRadius: BorderRadius.circular(
+                      999,
+                    ), // ripple stays circular
+                    child: Container(
+                      width: 55,
+                      height: 55,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Icon(
+                          item['icon'],
+                          color: Theme.of(context).colorScheme.onPrimary,
+                          size: 25,
+                        ),
                       ),
                     ),
                   ),
+
                   const SizedBox(height: 8),
                   // FIXED HEIGHT Text area
                   SizedBox(
@@ -153,7 +207,7 @@ class _HomeState extends State<Home> {
             }).toList(),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           // ── HERE: Basic CarouselView ──
           Padding(
             padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
@@ -169,7 +223,7 @@ class _HomeState extends State<Home> {
           const SizedBox(height: 12),
 
           generateCarousel(Home.destinations),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Padding(
             padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
             child: Align(

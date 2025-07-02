@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class Profile extends StatefulWidget {
-  const Profile({super.key});
+class Search extends StatefulWidget {
+  const Search({super.key});
 
   @override
-  State<Profile> createState() => _ProfileState();
+  State<Search> createState() => _SearchState();
 }
 
-class _ProfileState extends State<Profile> {
+class _SearchState extends State<Search> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -17,7 +17,7 @@ class _ProfileState extends State<Profile> {
         ),
         centerTitle: true,
         title: Text(
-          'Profile',
+          'Search',
           style: TextStyle(
             color: Theme.of(context).colorScheme.onPrimary,
             fontSize: 16,
@@ -28,7 +28,7 @@ class _ProfileState extends State<Profile> {
       ),
       body: Padding(
         padding: EdgeInsetsGeometry.fromLTRB(16, 8, 16, 8),
-        child: Text("Profile Page Content Here"),
+        child: Text("Search Page Content Here"),
       ),
     );
   }
