@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class Signup extends StatefulWidget {
+  const Signup({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<Signup> createState() => _SignupState();
 }
 
-class _LoginState extends State<Login> {
+class _SignupState extends State<Signup> {
   bool _isPasswordVisible = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -56,12 +56,12 @@ class _LoginState extends State<Login> {
               spacing: 16,
               children: [
                 Text(
-                  'Welcome back',
+                  'Sign up for a new account',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
 
                 Text(
-                  'Sign in to continue your journey with PITX.',
+                  'Start your journey with PITX.',
                   style: TextStyle(fontSize: 14),
                 ),
               ],
@@ -193,7 +193,7 @@ class _LoginState extends State<Login> {
                         backgroundColor: Theme.of(context).colorScheme.primary,
                       ),
                       child: Text(
-                        "Login",
+                        "Sign up",
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onPrimary,
                           fontSize: 14,
@@ -202,24 +202,6 @@ class _LoginState extends State<Login> {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        print("Forgot Password tapped");
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

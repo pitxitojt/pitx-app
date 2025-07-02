@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/pages/Login.dart';
+import 'package:pitx/pages/Signup.dart';
 
 class Welcome extends StatefulWidget {
   const Welcome({super.key});
@@ -123,7 +124,39 @@ class _WelcomeState extends State<Welcome> {
                     SizedBox(
                       width: double.infinity,
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            PageRouteBuilder(
+                              pageBuilder:
+                                  (context, animation, secondaryAnimation) =>
+                                      const Signup(),
+                              transitionsBuilder:
+                                  (
+                                    context,
+                                    animation,
+                                    secondaryAnimation,
+                                    child,
+                                  ) {
+                                    const begin = Offset(
+                                      0.0,
+                                      1.0,
+                                    ); // Slide from right
+                                    const end = Offset.zero;
+                                    const curve = Curves.easeInOut;
+
+                                    final tween = Tween(
+                                      begin: begin,
+                                      end: end,
+                                    ).chain(CurveTween(curve: curve));
+
+                                    return SlideTransition(
+                                      position: animation.drive(tween),
+                                      child: child,
+                                    );
+                                  },
+                            ),
+                          );
+                        },
 
                         style: TextButton.styleFrom(
                           backgroundColor: Theme.of(
