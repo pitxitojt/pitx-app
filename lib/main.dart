@@ -6,7 +6,6 @@ import 'package:pitx/screens/Welcome.dart';
 import 'package:pitx/pages/Profile.dart';
 import 'package:collection/collection.dart';
 import 'package:pitx/pages/Search.dart';
-import 'package:pitx/screens/Notifications.dart';
 
 void main() {
   runApp(const MyApp());
@@ -54,7 +53,7 @@ class Initialization extends StatefulWidget {
 
 class _InitializationState extends State<Initialization> {
   int _currentPage = 0;
-  bool _isLoggedIn = false;
+  bool _isLoggedIn = true;
 
   final List<Map<String, dynamic>> _bottomNavIcons = [
     {'label': "Home", 'icon': Icons.home, 'page': Home()},

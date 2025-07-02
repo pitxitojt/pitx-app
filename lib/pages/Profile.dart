@@ -8,6 +8,13 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  final List<Map<String, dynamic>> menuItems = [
+    {'label': 'About PITX', 'icon': Icons.info, 'page': null},
+    {'label': 'Contact Us', 'icon': Icons.phone, 'page': null},
+    {'label': 'Settings', 'icon': Icons.settings, 'page': null},
+    {'label': 'Logout', 'icon': Icons.logout, 'page': null},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,8 +34,74 @@ class _ProfileState extends State<Profile> {
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
-        padding: EdgeInsetsGeometry.fromLTRB(16, 8, 16, 8),
-        child: Text("Profile Page Content Here"),
+        padding: EdgeInsetsGeometry.all(16),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: () {
+                print("Profile tapped");
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 16,
+                children: [
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: Colors.grey,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(child: Icon(Icons.person, size: 25)),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 2,
+                    children: [
+                      Text(
+                        "JUAN DELA CRUZ",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text("+639123456789", style: TextStyle(fontSize: 12)),
+                      Text("pitx@pitx.com.ph", style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            ...menuItems.map((item) {
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: GestureDetector(
+                  onTap: () {
+                    // Handle menu item tap
+                  },
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        spacing: 8,
+                        children: [
+                          Icon(item['icon'], size: 18),
+                          Text(item['label'], style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }

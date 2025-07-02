@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/pages/FAQ.dart';
+import 'package:pitx/pages/Food.dart';
 import 'package:pitx/screens/Notifications.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
 
   static final List<Map<String, dynamic>> menu = [
-    {'icon': Icons.map, 'label': 'Bus Schedule'},
-    {'icon': Icons.directions_bus, 'label': 'Bus Operators'},
-    {'icon': Icons.fastfood, 'label': 'Food'},
-    {'icon': Icons.search, 'label': 'FAQs'},
+    {'icon': Icons.map, 'label': 'Bus Schedule', 'page': null},
+    {'icon': Icons.directions_bus, 'label': 'Bus Operators', 'page': null},
+    {'icon': Icons.fastfood, 'label': 'Food', 'page': Food()},
+    {'icon': Icons.search, 'label': 'FAQs', 'page': FAQ()},
   ];
 
   static final List<Map<String, dynamic>> destinations = [
@@ -165,6 +167,16 @@ class _HomeState extends State<Home> {
                   InkWell(
                     onTap: () {
                       // Handle tap on menu item
+
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) {
+                            return item['page'] ??
+                                Container(); // Navigate to page or do nothing
+                          },
+                        ),
+                      );
+
                       print("Tapped on ${item['label']}");
                     },
                     borderRadius: BorderRadius.circular(
