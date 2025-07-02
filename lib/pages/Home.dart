@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pitx/components/Carousel.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
