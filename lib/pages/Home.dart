@@ -118,10 +118,11 @@ class _HomeState extends State<Home> {
         // the App.build method, and use it to set our appbar title.
         title: Image.asset('assets/logo.png', fit: BoxFit.contain, height: 20),
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
           Stack(
             children: [
               // Black background image
@@ -251,6 +252,7 @@ class _HomeState extends State<Home> {
 
           generateCarousel(Home.foodOptions),
         ],
+        ),
       ),
     );
   }
