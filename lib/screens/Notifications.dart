@@ -176,7 +176,18 @@ class _NotificationsState extends State<Notifications> {
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Container(
-        decoration: BoxDecoration(color: Colors.grey[50]),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              Colors.white,
+            ],
+            stops: [0.0, 0.5, 0.7],
+          ),
+        ),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,16 +196,7 @@ class _NotificationsState extends State<Notifications> {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                    ],
-                  ),
-                ),
+                decoration: BoxDecoration(color: Colors.transparent),
                 child: Column(
                   children: [
                     Container(
@@ -238,101 +240,110 @@ class _NotificationsState extends State<Notifications> {
               ),
 
               // Notifications content
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Section header
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Section header
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.notifications_active,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
                           ),
-                          child: Icon(
-                            Icons.notifications_active,
-                            size: 16,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text(
-                          'Recent Notifications',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Spacer(),
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            '${notifications.where((n) => !n['isRead']).length} new',
+                          SizedBox(width: 8),
+                          Text(
+                            'Recent Notifications',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              color: Colors.red,
+                              color: Colors.black87,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 16),
-
-                    // Notification cards
-                    ...notifications.map((notification) {
-                      return generateNotificationCard(notification);
-                    }).toList(),
-
-                    // Empty state or additional content
-                    if (notifications.isEmpty)
-                      Container(
-                        width: double.infinity,
-                        padding: EdgeInsets.all(32),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.notifications_none,
-                              size: 64,
-                              color: Colors.grey[400],
+                          Spacer(),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                            SizedBox(height: 16),
-                            Text(
-                              'No notifications yet',
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              '${notifications.where((n) => !n['isRead']).length} new',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
+                                color: Colors.red,
                               ),
                             ),
-                            SizedBox(height: 4),
-                            Text(
-                              'We\'ll notify you when there are updates',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+                      SizedBox(height: 16),
 
-                    // Add extra bottom padding
-                    SizedBox(height: 32),
-                  ],
+                      // Notification cards
+                      ...notifications.map((notification) {
+                        return generateNotificationCard(notification);
+                      }).toList(),
+
+                      // Empty state or additional content
+                      if (notifications.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(32),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.notifications_none,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'No notifications yet',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'We\'ll notify you when there are updates',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      // Add extra bottom padding
+                      SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ],
