@@ -148,27 +148,19 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
                 children: [
                   const SizedBox(height: 8),
 
-                  // Name fields row
-                  Row(
-                    children: [
-                      // First Name
-                      Expanded(
-                        child: _buildInputField(
-                          label: 'First Name',
-                          controller: _firstNameController,
-                          isRequired: true,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Last Name
-                      Expanded(
-                        child: _buildInputField(
-                          label: 'Last Name',
-                          controller: _lastNameController,
-                          isRequired: true,
-                        ),
-                      ),
-                    ],
+                  // Name fields
+                  _buildInputField(
+                    label: 'First Name',
+                    controller: _firstNameController,
+                    isRequired: true,
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  _buildInputField(
+                    label: 'Last Name',
+                    controller: _lastNameController,
+                    isRequired: true,
                   ),
 
                   const SizedBox(height: 20),
@@ -333,14 +325,27 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Mobile Number',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+        Row(
+          children: [
+            Text(
+              'Mobile Number',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+            Text(
+              ' *',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
+
         const SizedBox(height: 8),
         Container(
           height: 56,
@@ -406,13 +411,25 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Date of Birth',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
+        Row(
+          children: [
+            Text(
+              'Date of Birth',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[700],
+              ),
+            ),
+            Text(
+              ' *',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 4),
         Text(
@@ -469,10 +486,13 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
                 color: Colors.grey[700],
               ),
             ),
-            const SizedBox(width: 8),
             Text(
-              'Optional',
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              ' *',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
