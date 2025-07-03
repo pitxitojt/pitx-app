@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pitx/main.dart';
 
 class ProfileCompletion extends StatefulWidget {
   const ProfileCompletion({super.key});
@@ -117,7 +116,7 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'You are just one step away from enjoying exclusive privileges with your account.',
+                      'You are just one step away from creating your account.',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
@@ -197,12 +196,10 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
                           ? () {
                               // Handle profile completion
                               print("Profile completion submitted");
-                              // Set logged in state and navigate to main app
-                              AuthManager.setLoggedIn(true);
-                              Navigator.pushNamedAndRemoveUntil(
+                              // Navigate to phone verification
+                              Navigator.pushNamed(
                                 context,
-                                '/',
-                                (route) => false,
+                                '/phone-verification',
                               );
                             }
                           : null,

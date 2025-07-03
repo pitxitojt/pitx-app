@@ -9,6 +9,7 @@ import 'package:pitx/pages/Search.dart';
 import 'package:pitx/pages/Login.dart';
 import 'package:pitx/pages/Signup.dart';
 import 'package:pitx/pages/ProfileCompletion.dart';
+import 'package:pitx/pages/PhoneVerification.dart';
 
 // Utility class to manage authentication state
 class AuthManager {
@@ -63,6 +64,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const Login(),
         '/signup': (context) => const Signup(),
         '/profile-completion': (context) => const ProfileCompletion(),
+        '/phone-verification': (context) => const PhoneVerification(),
       },
     );
   }
