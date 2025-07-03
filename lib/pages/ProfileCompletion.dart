@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:country_flags/country_flags.dart';
 
 class ProfileCompletion extends StatefulWidget {
   const ProfileCompletion({super.key});
@@ -356,20 +357,16 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/logo.png', // Placeholder for Philippines flag
+                    CountryFlag.fromCountryCode(
+                      'PH',
                       width: 20,
                       height: 20,
+                      shape: Circle(),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       '+63',
                       style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                    ),
-                    Icon(
-                      Icons.keyboard_arrow_down,
-                      color: Colors.grey[600],
-                      size: 20,
                     ),
                   ],
                 ),

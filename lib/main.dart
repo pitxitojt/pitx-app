@@ -56,6 +56,7 @@ class MyApp extends StatelessWidget {
           onPrimary: Colors.white,
         ),
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+        fontFamily: GoogleFonts.poppins().fontFamily,
       ),
       initialRoute: '/',
       routes: {
