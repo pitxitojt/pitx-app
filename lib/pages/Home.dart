@@ -145,7 +145,7 @@ class _HomeState extends State<Home> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false,
         iconTheme: IconThemeData(color: Colors.white),
         actions: [
           Container(
@@ -190,7 +190,11 @@ class _HomeState extends State<Home> {
           ),
         ],
         backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Image.asset('assets/logo.png', fit: BoxFit.contain, height: 20),
+        title: Image.asset(
+          'assets/logo-short.png',
+          fit: BoxFit.contain,
+          height: 24,
+        ),
       ),
       body: Container(
         decoration: BoxDecoration(
