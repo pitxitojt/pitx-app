@@ -86,19 +86,19 @@ class _BusSchedulesState extends State<BusSchedules> {
   Color getStatusColor(String status) {
     switch (status.toUpperCase()) {
       case 'ARRIVING':
-        return Colors.green;
+        return Color(0xFF10B981); // Modern green
       case 'CANCELLED':
-        return Colors.red;
+        return Color(0xFFEF4444); // Modern red
       case 'ON TIME':
-        return Colors.blue;
+        return Color(0xFF3B82F6); // Modern blue
       case 'DELAYED':
-        return Colors.orange;
+        return Color(0xFFF59E0B); // Modern amber
       case 'BOARDING':
-        return Colors.purple;
+        return Color(0xFF8B5CF6); // Modern purple
       case 'DEPARTED':
-        return Colors.grey;
+        return Color(0xFF6B7280); // Modern gray
       default:
-        return Colors.blue; // Default color
+        return Color(0xFF3B82F6); // Default modern blue
     }
   }
 
@@ -133,31 +133,38 @@ class _BusSchedulesState extends State<BusSchedules> {
 
   Widget buildScheduleCard(Map<String, dynamic> schedule) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 3),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Operator
             Expanded(
               flex: 3,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  schedule['operator'],
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
+              child: Text(
+                schedule['operator'],
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            SizedBox(width: 8),
             // Route
             Expanded(
               flex: 3,
@@ -166,7 +173,11 @@ class _BusSchedulesState extends State<BusSchedules> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   schedule['route'],
-                  style: TextStyle(fontSize: 11, color: Colors.black87),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -174,36 +185,69 @@ class _BusSchedulesState extends State<BusSchedules> {
             Expanded(
               flex: 1,
               child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    schedule['gate'],
-                    style: TextStyle(fontSize: 11, color: Colors.black87),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      schedule['gate'],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
+            SizedBox(width: 8),
             // Bay
             Expanded(
               flex: 1,
               child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    schedule['bay'],
-                    style: TextStyle(fontSize: 11, color: Colors.black87),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      schedule['bay'],
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
+            SizedBox(width: 8),
             // Status
             Expanded(
               flex: 2,
               child: Container(
-                padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                 decoration: BoxDecoration(
                   color: getStatusColor(schedule['status']),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: getStatusColor(
+                        schedule['status'],
+                      ).withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Center(
                   child: FittedBox(
@@ -227,42 +271,100 @@ class _BusSchedulesState extends State<BusSchedules> {
   }
 
   Widget buildTimeSection(Map<String, dynamic> timeData) {
-    return Column(
-      children: [
-        // Time header
-        Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: Color(0xFF1E3A8A), // Dark blue
-            borderRadius: BorderRadius.circular(4),
+    return Container(
+      margin: EdgeInsets.symmetric(vertical: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: Offset(0, 4),
           ),
-          child: Center(
-            child: Text(
-              timeData['time'],
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+        ],
+      ),
+      child: Column(
+        children: [
+          // Time header with gradient
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withOpacity(0.9),
+                ],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.access_time, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Text(
+                  timeData['time'],
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        // Schedule entries
-        ...timeData['schedules']
-            .map<Widget>((schedule) => buildScheduleCard(schedule))
-            .toList(),
-      ],
+          // Schedule entries container
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+            ),
+            child: Column(
+              children: [
+                SizedBox(height: 8),
+                ...timeData['schedules']
+                    .map<Widget>((schedule) => buildScheduleCard(schedule))
+                    .toList(),
+                SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget buildTableHeader() {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8),
-      padding: EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+      margin: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-        color: Color(0xFF3B82F6), // Blue header
-        borderRadius: BorderRadius.circular(4),
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primary.withOpacity(0.85),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            blurRadius: 8,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -274,7 +376,7 @@ class _BusSchedulesState extends State<BusSchedules> {
               child: Text(
                 'Operator',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -287,9 +389,9 @@ class _BusSchedulesState extends State<BusSchedules> {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                'Route',
+                'Destination',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -304,7 +406,7 @@ class _BusSchedulesState extends State<BusSchedules> {
                 child: Text(
                   'Gate',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -320,7 +422,7 @@ class _BusSchedulesState extends State<BusSchedules> {
                 child: Text(
                   'Bay',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -336,7 +438,7 @@ class _BusSchedulesState extends State<BusSchedules> {
                 child: Text(
                   'Status',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -353,60 +455,89 @@ class _BusSchedulesState extends State<BusSchedules> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        iconTheme: IconThemeData(
-          color: Theme.of(context).colorScheme.onPrimary,
-        ),
+        elevation: 0,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
         title: Text(
           'Bus Schedules',
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: 18,
           ),
         ),
       ),
       body: Column(
         children: [
-          // Date header
+          // Modern date header with gradient
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(16),
-            color: Colors.grey[100],
-            child: Center(
-              child: Text(
-                getCurrentDate(),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E3A8A),
-                ),
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                ],
               ),
+            ),
+            child: Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "Live Schedules",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  getCurrentDate(),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  "Real-time bus schedule information",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Content
+          // Content with modern background
           Expanded(
             child: Container(
-              color: Colors.grey[100],
+              decoration: BoxDecoration(color: Colors.grey[50]),
               child: SingleChildScrollView(
                 physics: AlwaysScrollableScrollPhysics(),
                 padding: EdgeInsets.all(16),
                 child: Column(
                   children: [
                     buildTableHeader(),
-                    SizedBox(height: 16),
+                    SizedBox(height: 8),
                     ...busScheduleData
-                        .map(
-                          (timeData) => Padding(
-                            padding: EdgeInsets.only(bottom: 16),
-                            child: buildTimeSection(timeData),
-                          ),
-                        )
+                        .map((timeData) => buildTimeSection(timeData))
                         .toList(),
                     // Add extra bottom padding for better scrolling experience
-                    SizedBox(height: 20),
+                    SizedBox(height: 32),
                   ],
                 ),
               ),
