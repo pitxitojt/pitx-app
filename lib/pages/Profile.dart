@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/main.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -148,6 +149,15 @@ class _ProfileState extends State<Profile> {
                           child: InkWell(
                             onTap: () {
                               print("Tapped on ${item['label']}");
+                              if (item['label'] == 'Logout') {
+                                // Set logged out state and navigate to welcome screen
+                                AuthManager.setLoggedIn(false);
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/',
+                                  (route) => false,
+                                );
+                              }
                             },
                             borderRadius: BorderRadius.circular(16),
                             child: Padding(

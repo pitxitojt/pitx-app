@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/main.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -243,8 +244,13 @@ class _LoginState extends State<Login> {
                     child: ElevatedButton(
                       onPressed: _isFormValid
                           ? () {
-                              // Handle login action
-                              print("Login button pressed");
+                              // Set logged in state and navigate to main app
+                              AuthManager.setLoggedIn(true);
+                              Navigator.pushNamedAndRemoveUntil(
+                                context,
+                                '/',
+                                (route) => false,
+                              );
                             }
                           : null,
                       style: ElevatedButton.styleFrom(

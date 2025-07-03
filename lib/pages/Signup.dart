@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/pages/ProfileCompletion.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -243,8 +244,14 @@ class _SignupState extends State<Signup> {
                     child: ElevatedButton(
                       onPressed: _isFormValid
                           ? () {
-                              // Handle signup action
-                              print("Sign up button pressed");
+                              // Temporarily redirect to profile completion
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ProfileCompletion(),
+                                ),
+                              );
                             }
                           : null,
                       style: ElevatedButton.styleFrom(

@@ -6,6 +6,35 @@ import 'package:pitx/screens/Welcome.dart';
 import 'package:pitx/pages/Profile.dart';
 import 'package:collection/collection.dart';
 import 'package:pitx/pages/Search.dart';
+import 'package:pitx/pages/Login.dart';
+import 'package:pitx/pages/Signup.dart';
+import 'package:pitx/pages/ProfileCompletion.dart';
+
+// Utility class to manage authentication state
+class AuthManager {
+  static bool _isLoggedIn = false;
+  static final List<Function(bool)> _listeners = [];
+
+  static bool get isLoggedIn => _isLoggedIn;
+
+  static void setLoggedIn(bool value) {
+    if (_isLoggedIn != value) {
+      _isLoggedIn = value;
+      // Notify listeners
+      for (var listener in _listeners) {
+        listener(_isLoggedIn);
+      }
+    }
+  }
+
+  static void addListener(Function(bool) listener) {
+    _listeners.add(listener);
+  }
+
+  static void removeListener(Function(bool) listener) {
+    _listeners.remove(listener);
+  }
+}
 
 void main() {
   runApp(const MyApp());
@@ -25,10 +54,16 @@ class MyApp extends StatelessWidget {
           primary: Color(0xff1d439b),
           onPrimary: Colors.white,
         ),
-
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
       ),
-      home: const Initialization(title: 'Flutter Demo Home Page'),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const Initialization(title: 'PITX'),
+        '/welcome': (context) => const Welcome(),
+        '/login': (context) => const Login(),
+        '/signup': (context) => const Signup(),
+        '/profile-completion': (context) => const ProfileCompletion(),
+      },
     );
   }
 }
@@ -43,7 +78,28 @@ class Initialization extends StatefulWidget {
 
 class _InitializationState extends State<Initialization> {
   int _currentPage = 0;
-  bool _isLoggedIn = false;
+  bool _localIsLoggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _localIsLoggedIn = AuthManager.isLoggedIn;
+    // Add listener for login state changes
+    AuthManager.addListener(_handleLoginStateChange);
+  }
+
+  @override
+  void dispose() {
+    // Remove listener when widget is disposed
+    AuthManager.removeListener(_handleLoginStateChange);
+    super.dispose();
+  }
+
+  void _handleLoginStateChange(bool isLoggedIn) {
+    setState(() {
+      _localIsLoggedIn = isLoggedIn;
+    });
+  }
 
   final List<Map<String, dynamic>> _bottomNavIcons = [
     {'label': "Home", 'icon': Icons.home, 'page': Home()},
@@ -67,7 +123,7 @@ class _InitializationState extends State<Initialization> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isLoggedIn) {
+    if (!_localIsLoggedIn) {
       return Welcome();
     }
     return Scaffold(
