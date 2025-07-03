@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -9,12 +10,32 @@ class Profile extends StatefulWidget {
 }
 
 class _ProfileState extends State<Profile> {
+  late final _user;
+
+  Future<void> _signOut() async {
+    try {
+      await supabase.auth.signOut();
+      AuthManager.setLoggedIn(false);
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+    } catch (e) {
+      print("Error signing out: $e");
+    }
+  }
+
   final List<Map<String, dynamic>> menuItems = [
     {'label': 'About PITX', 'icon': Icons.info, 'page': null},
     {'label': 'Contact Us', 'icon': Icons.phone, 'page': null},
     {'label': 'Settings', 'icon': Icons.settings, 'page': null},
     {'label': 'Logout', 'icon': Icons.logout, 'page': null},
   ];
+
+  void initState() {
+    super.initState();
+    // Initialize any necessary data or state here
+    setState(() {
+      _user = supabase.auth.currentUser;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +119,8 @@ class _ProfileState extends State<Profile> {
                     ),
                     SizedBox(height: 16),
                     Text(
-                      "JUAN DELA CRUZ",
+                      '${_user.userMetadata['first_name']} ${_user.userMetadata['last_name']}'
+                          .toUpperCase(),
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -107,15 +129,7 @@ class _ProfileState extends State<Profile> {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      "+639123456789",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      "pitx@pitx.com.ph",
+                      '+${_user.phone}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withOpacity(0.9),
@@ -157,16 +171,11 @@ class _ProfileState extends State<Profile> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () {
+                              onTap: () async {
                                 print("Tapped on ${item['label']}");
                                 if (item['label'] == 'Logout') {
                                   // Set logged out state and navigate to welcome screen
-                                  AuthManager.setLoggedIn(false);
-                                  Navigator.pushNamedAndRemoveUntil(
-                                    context,
-                                    '/',
-                                    (route) => false,
-                                  );
+                                  await _signOut();
                                 }
                               },
                               borderRadius: BorderRadius.circular(16),

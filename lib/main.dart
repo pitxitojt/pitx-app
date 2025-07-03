@@ -10,6 +10,8 @@ import 'package:pitx/pages/Login.dart';
 import 'package:pitx/pages/Signup.dart';
 import 'package:pitx/pages/ProfileCompletion.dart';
 import 'package:pitx/pages/PhoneVerification.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 
 // Utility class to manage authentication state
 class AuthManager {
@@ -37,9 +39,18 @@ class AuthManager {
   }
 }
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  usePathUrlStrategy();
+  await Supabase.initialize(
+    url: 'SUPABASE_URL',
+    anonKey:
+        'SUPABASE_ANON_KEY',
+  );
   runApp(const MyApp());
 }
+
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -65,7 +76,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const Login(),
         '/signup': (context) => const Signup(),
         '/profile-completion': (context) => const ProfileCompletion(),
-        '/phone-verification': (context) => const PhoneVerification(),
+        // '/phone-verification': (context) => const PhoneVerification(),
       },
     );
   }

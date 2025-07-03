@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pitx/pages/PhoneVerification.dart';
 import 'package:pitx/pages/ProfileCompletion.dart';
+import 'package:country_flags/country_flags.dart';
 
 class Signup extends StatefulWidget {
   const Signup({super.key});
@@ -10,16 +13,13 @@ class Signup extends StatefulWidget {
 
 class _SignupState extends State<Signup> {
   bool _isPasswordVisible = false;
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
 
-  bool get _isFormValid =>
-      _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+  bool get _isFormValid => _phoneController.text.isNotEmpty;
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -67,7 +67,7 @@ class _SignupState extends State<Signup> {
                     const SizedBox(height: 32),
                     // Header text
                     Text(
-                      'Sign up for a new account',
+                      'Enter your mobile number',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -104,16 +104,14 @@ class _SignupState extends State<Signup> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 8),
-
-                  // Email field
+                  // Phone Number field
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Text(
-                            'Email',
+                            'Phone Number',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -141,95 +139,69 @@ class _SignupState extends State<Signup> {
                             width: 1,
                           ),
                         ),
-                        child: TextField(
-                          controller: _emailController,
-                          onChanged: (value) => setState(() {}),
-                          style: TextStyle(fontSize: 16),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            hintText: 'Enter your email',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Password field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Password',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          Text(
-                            ' *',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            width: 1,
-                          ),
-                        ),
-                        child: TextField(
-                          controller: _passwordController,
-                          onChanged: (value) => setState(() {}),
-                          obscureText: !_isPasswordVisible,
-                          style: TextStyle(fontSize: 16),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            hintText: 'Create a password',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 16,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: Colors.grey[600],
-                                size: 22,
+                        child: Row(
+                          children: [
+                            // Country flag and code
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(2),
+                                      child: CountryFlag.fromCountryCode(
+                                        'PH',
+                                        width: 20,
+                                        height: 20,
+                                        shape: Circle(),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    '+63',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
                             ),
-                          ),
+                            // Divider
+                            Container(
+                              height: 24,
+                              width: 1,
+                              color: Colors.grey[300],
+                            ),
+                            // Phone number input
+                            Expanded(
+                              child: TextField(
+                                controller: _phoneController,
+                                onChanged: (value) => setState(() {}),
+                                style: TextStyle(fontSize: 16),
+                                keyboardType: TextInputType.phone,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  hintText: '9XX XXX XXXX',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -244,12 +216,14 @@ class _SignupState extends State<Signup> {
                     child: ElevatedButton(
                       onPressed: _isFormValid
                           ? () {
-                              // Temporarily redirect to profile completion
+                              // Redirect to phone verification
+
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ProfileCompletion(),
+                                  builder: (context) => PhoneVerification(
+                                    phoneNumber: _phoneController.text,
+                                  ),
                                 ),
                               );
                             }
@@ -267,7 +241,7 @@ class _SignupState extends State<Signup> {
                         ),
                       ),
                       child: Text(
-                        "Sign up",
+                        "Continue",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -277,60 +251,6 @@ class _SignupState extends State<Signup> {
                   ),
 
                   const SizedBox(height: 32),
-
-                  // Divider with OR
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 16),
-                          child: Divider(color: Colors.grey[300], height: 1),
-                        ),
-                      ),
-                      Text(
-                        "OR",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 16),
-                          child: Divider(color: Colors.grey[300], height: 1),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Social login buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _SocialLoginButton(
-                        icon: Icons.g_mobiledata,
-                        label: 'Google',
-                        onTap: () {},
-                      ),
-                      const SizedBox(width: 16),
-                      _SocialLoginButton(
-                        icon: Icons.facebook,
-                        label: 'Facebook',
-                        onTap: () {},
-                      ),
-                      const SizedBox(width: 16),
-                      _SocialLoginButton(
-                        icon: Icons.apple,
-                        label: 'Apple',
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 40),
                 ],
               ),
             ),

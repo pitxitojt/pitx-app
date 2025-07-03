@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:country_flags/country_flags.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:pitx/main.dart';
 
 class ProfileCompletion extends StatefulWidget {
   const ProfileCompletion({super.key});
@@ -12,26 +14,83 @@ class ProfileCompletion extends StatefulWidget {
 class _ProfileCompletionState extends State<ProfileCompletion> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _dateOfBirthController = TextEditingController();
 
   String? _selectedGender;
+  String? _errorMessage;
+  bool _isLoading = false;
 
   final List<String> _genderOptions = ['Male', 'Female', 'Other'];
 
-  bool get _isFormValid =>
-      _firstNameController.text.isNotEmpty &&
-      _lastNameController.text.isNotEmpty &&
-      _phoneController.text.isNotEmpty &&
-      _dateOfBirthController.text.isNotEmpty;
+  bool get _isFormValid {
+    final isValid =
+        _firstNameController.text.isNotEmpty &&
+        _lastNameController.text.isNotEmpty &&
+        _dateOfBirthController.text.isNotEmpty;
+
+    // Clear error message when form becomes valid
+    if (isValid && _errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _errorMessage = null;
+        });
+      });
+    }
+
+    return isValid;
+  }
 
   @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
-    _phoneController.dispose();
     _dateOfBirthController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      // Validate required fields
+      if (_firstNameController.text.trim().isEmpty) {
+        throw Exception('First name is required');
+      }
+      if (_lastNameController.text.trim().isEmpty) {
+        throw Exception('Last name is required');
+      }
+      if (_dateOfBirthController.text.trim().isEmpty) {
+        throw Exception('Date of birth is required');
+      }
+
+      print("======UPDATING USER PROFILE======");
+
+      await supabase.auth.updateUser(
+        UserAttributes(
+          data: {
+            'first_name': _firstNameController.text.trim(),
+            'last_name': _lastNameController.text.trim(),
+            'date_of_birth': _dateOfBirthController.text.trim(),
+          },
+        ),
+      );
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Navigate to home after successful profile completion
+      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+      print("Profile completion error: $e");
+    }
   }
 
   Future<void> _selectDate() async {
@@ -165,56 +224,65 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
 
                   const SizedBox(height: 20),
 
-                  // Mobile Number with country code
-                  _buildPhoneField(),
-
-                  const SizedBox(height: 20),
-
                   // Date of Birth
                   _buildDateField(),
 
                   const SizedBox(height: 20),
 
-                  // Gender
-                  _buildGenderField(),
+                  // Error message (if any)
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
 
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 12),
 
                   // Submit button
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      onPressed: _isFormValid
-                          ? () {
+                      onPressed: (_isFormValid && !_isLoading)
+                          ? () async {
                               // Handle profile completion
-                              print("Profile completion submitted");
-                              // Navigate to phone verification
-                              Navigator.pushNamed(
-                                context,
-                                '/phone-verification',
-                              );
+                              await _signUp();
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _isFormValid
+                        backgroundColor: (_isFormValid && !_isLoading)
                             ? Theme.of(context).colorScheme.primary
                             : Colors.grey[300],
-                        foregroundColor: _isFormValid
+                        foregroundColor: (_isFormValid && !_isLoading)
                             ? Colors.white
                             : Colors.grey[500],
-                        elevation: _isFormValid ? 2 : 0,
+                        elevation: (_isFormValid && !_isLoading) ? 2 : 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: Text(
-                        "Submit",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                              ),
+                            )
+                          : Text(
+                              "Submit",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
 
@@ -378,28 +446,8 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
               ),
               // Divider
               Container(height: 24, width: 1, color: Colors.grey[300]),
+
               // Phone number input
-              Expanded(
-                child: TextField(
-                  controller: _phoneController,
-                  onChanged: (value) => setState(() {}),
-                  style: TextStyle(fontSize: 16),
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    hintText: '9XX XXX XXXX',
-                    hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
-                  ),
-                ),
-              ),
             ],
           ),
         ),

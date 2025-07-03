@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pitx/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 
 class PhoneVerification extends StatefulWidget {
-  const PhoneVerification({super.key});
+  final String phoneNumber;
+  const PhoneVerification({super.key, required this.phoneNumber});
 
   @override
   State<PhoneVerification> createState() => _PhoneVerificationState();
@@ -18,9 +21,62 @@ class _PhoneVerificationState extends State<PhoneVerification> {
 
   bool _isVerifying = false;
   String? _errorMessage;
+  late final String number = '+63${widget.phoneNumber}';
+
+  // Timer variables
+  Timer? _resendTimer;
+  int _resendCountdown = 60;
+  bool _canResend = false;
+
+  @override
+  void initState() {
+    super.initState();
+    print("===========SEND OTP===========");
+    _sendOtp();
+    _startResendTimer(); // Always start timer regardless of OTP success/failure
+  }
+
+  void _startResendTimer() {
+    // Cancel existing timer if any
+    _resendTimer?.cancel();
+
+    setState(() {
+      _canResend = false;
+      _resendCountdown = 60;
+    });
+
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_resendCountdown > 0) {
+          _resendCountdown--;
+        } else {
+          _canResend = true;
+          timer.cancel();
+        }
+      });
+    });
+  }
+
+  Future<void> _sendOtp() async {
+    try {
+      // Send OTP
+      await supabase.auth.signInWithOtp(phone: number);
+      print("OTP sent successfully to $number");
+    } catch (e) {
+      print("OTP sending failed: $e");
+      // Show demo message when OTP is disabled
+      if (e.toString().contains('otp_disabled')) {
+        setState(() {
+          _errorMessage = "Demo mode: Use code '123456' to verify";
+        });
+      }
+    }
+    // Note: Timer is now started in initState() to ensure it always runs
+  }
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     for (var controller in _otpControllers) {
       controller.dispose();
     }
@@ -39,32 +95,116 @@ class _PhoneVerificationState extends State<PhoneVerification> {
     return true;
   }
 
-  void _verifyOTP() {
+  Future<void> _verifyOTP() async {
     setState(() {
       _isVerifying = true;
       _errorMessage = null;
     });
 
-    // Simulate OTP verification delay
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        _isVerifying = false;
-      });
+    final enteredOtp = _otpControllers.map((c) => c.text).join();
 
-      // For demo purposes, any 6-digit code is accepted
-      if (_isFormValid) {
-        // Set logged in state and navigate to main app
+    try {
+      print("======VERIFY OTP======");
+      final AuthResponse res = await supabase.auth.verifyOTP(
+        type: OtpType.sms,
+        token: enteredOtp,
+        phone: number,
+      );
+      print("OTP verification response: $res");
+
+      if (res.user != null) {
+        setState(() {
+          _isVerifying = false;
+        });
         AuthManager.setLoggedIn(true);
-        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        await _checkProfileAndNavigate();
       } else {
         setState(() {
-          _errorMessage = 'Please enter all digits of the verification code';
+          _isVerifying = false;
+          _errorMessage = 'Invalid verification code. Please try again.';
         });
       }
-    });
+    } catch (e) {
+      print("OTP verification error: $e");
+      setState(() {
+        _isVerifying = false;
+        _errorMessage =
+            'Failed to verify OTP. Please resend code and try again.';
+      });
+    }
   }
 
-  void _resendCode() {
+  Future<void> _checkProfileAndNavigate() async {
+    try {
+      // Get current user data
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        final userData = user.userMetadata;
+        print("User metadata: $userData");
+
+        // Check if user has required profile information
+        final firstName = userData?['first_name'];
+        final lastName = userData?['last_name'];
+        final dateOfBirth = userData?['date_of_birth'];
+
+        bool hasCompleteProfile =
+            firstName != null &&
+            firstName.toString().isNotEmpty &&
+            lastName != null &&
+            lastName.toString().isNotEmpty &&
+            dateOfBirth != null &&
+            dateOfBirth.toString().isNotEmpty;
+
+        print("Profile complete: $hasCompleteProfile");
+        print(
+          "First name: $firstName, Last name: $lastName, DOB: $dateOfBirth",
+        );
+
+        if (hasCompleteProfile) {
+          // User has complete profile, go to home page
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        } else {
+          // User needs to complete profile
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/profile-completion',
+            (route) => false,
+          );
+        }
+      } else {
+        // No user found, go to profile completion as fallback
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/profile-completion',
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      print("Error checking profile: $e");
+      // In case of error, default to profile completion
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/profile-completion',
+        (route) => false,
+      );
+    }
+  }
+
+  void _resendCode() async {
+    if (!_canResend) return;
+
+    setState(() {
+      _isVerifying = true;
+      _errorMessage = null;
+    });
+
+    await _sendOtp();
+    _startResendTimer(); // Restart the timer after resending
+
+    setState(() {
+      _isVerifying = false;
+    });
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Verification code resent!')));
@@ -123,10 +263,18 @@ class _PhoneVerificationState extends State<PhoneVerification> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Enter the 6-digit verification code sent to your phone',
+                      'Enter the 6-digit verification code sent to',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                    Text(
+                      number,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withOpacity(0.9),
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -221,12 +369,16 @@ class _PhoneVerificationState extends State<PhoneVerification> {
                   // Resend code option
                   Center(
                     child: GestureDetector(
-                      onTap: _resendCode,
+                      onTap: _canResend ? _resendCode : null,
                       child: Text(
-                        'Resend Code',
+                        _canResend
+                            ? 'Resend Code'
+                            : 'Resend Code in ${_resendCountdown}s',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Theme.of(context).colorScheme.primary,
+                          color: _canResend
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey[500],
                           fontWeight: FontWeight.w500,
                         ),
                       ),

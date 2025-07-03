@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:pitx/main.dart';
+import 'package:country_flags/country_flags.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -10,17 +12,28 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   bool _isPasswordVisible = false;
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  late final TextEditingController _mobileController = TextEditingController();
+  late final TextEditingController _passwordController =
+      TextEditingController();
 
   bool get _isFormValid =>
-      _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+      _mobileController.text.isNotEmpty && _passwordController.text.isNotEmpty;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _mobileController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signIn() async {
+    try {
+      final mobile = _mobileController.text;
+      final response = await supabase.auth.signInWithOtp(phone: mobile);
+      print("User logged in with mobile: ${_mobileController.text}");
+    } catch (e) {
+      print("Login failed: $e");
+    }
   }
 
   @override
@@ -106,14 +119,14 @@ class _LoginState extends State<Login> {
                 children: [
                   const SizedBox(height: 8),
 
-                  // Email or Mobile field
+                  // Mobile Number field
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Text(
-                            'Email or phone',
+                            'Mobile Number',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -141,95 +154,69 @@ class _LoginState extends State<Login> {
                             width: 1,
                           ),
                         ),
-                        child: TextField(
-                          controller: _emailController,
-                          onChanged: (value) => setState(() {}),
-                          style: TextStyle(fontSize: 16),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            hintText: 'Enter your email or phone number',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Password field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Password',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          Text(
-                            ' *',
-                            style: TextStyle(
-                              color: Colors.red,
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            width: 1,
-                          ),
-                        ),
-                        child: TextField(
-                          controller: _passwordController,
-                          onChanged: (value) => setState(() {}),
-                          obscureText: !_isPasswordVisible,
-                          style: TextStyle(fontSize: 16),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 16,
-                            ),
-                            hintText: 'Enter your password',
-                            hintStyle: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 16,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: Colors.grey[600],
-                                size: 22,
+                        child: Row(
+                          children: [
+                            // Country flag and code
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(2),
+                                      child: CountryFlag.fromCountryCode(
+                                        'PH',
+                                        width: 20,
+                                        height: 20,
+                                        shape: Circle(),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    '+63',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
                             ),
-                          ),
+                            // Divider
+                            Container(
+                              height: 24,
+                              width: 1,
+                              color: Colors.grey[300],
+                            ),
+                            // Phone number input
+                            Expanded(
+                              child: TextField(
+                                controller: _mobileController,
+                                onChanged: (value) => setState(() {}),
+                                style: TextStyle(fontSize: 16),
+                                keyboardType: TextInputType.phone,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(10),
+                                ],
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
+                                  hintText: '9XX XXX XXXX',
+                                  hintStyle: TextStyle(
+                                    color: Colors.grey[500],
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -243,8 +230,9 @@ class _LoginState extends State<Login> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: _isFormValid
-                          ? () {
+                          ? () async {
                               // Set logged in state and navigate to main app
+                              await _signIn();
                               AuthManager.setLoggedIn(true);
                               Navigator.pushNamedAndRemoveUntil(
                                 context,
@@ -276,79 +264,6 @@ class _LoginState extends State<Login> {
                   ),
 
                   const SizedBox(height: 20),
-
-                  // Forgot password
-                  Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        print("Forgot Password tapped");
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Divider with OR
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 16),
-                          child: Divider(color: Colors.grey[300], height: 1),
-                        ),
-                      ),
-                      Text(
-                        "OR",
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          margin: const EdgeInsets.only(left: 16),
-                          child: Divider(color: Colors.grey[300], height: 1),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Social login buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _SocialLoginButton(
-                        icon: Icons.g_mobiledata,
-                        label: 'Google',
-                        onTap: () {},
-                      ),
-                      const SizedBox(width: 16),
-                      _SocialLoginButton(
-                        icon: Icons.facebook,
-                        label: 'Facebook',
-                        onTap: () {},
-                      ),
-                      const SizedBox(width: 16),
-                      _SocialLoginButton(
-                        icon: Icons.apple,
-                        label: 'Apple',
-                        onTap: () {},
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 40),
                 ],
               ),
             ),
