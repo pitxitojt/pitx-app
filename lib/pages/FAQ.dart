@@ -7,7 +7,7 @@ class FAQ extends StatefulWidget {
   State<FAQ> createState() => _FAQState();
 }
 
-class _FAQState extends State<FAQ> {
+class _FAQState extends State<FAQ> with TickerProviderStateMixin {
   // Dummy FAQ data
   final List<Map<String, String>> faqData = [
     {
@@ -65,177 +65,412 @@ class _FAQState extends State<FAQ> {
   // Track which FAQ items are expanded
   List<bool> expandedStates = [];
 
+  // Animation controllers for smooth transitions
+  List<AnimationController> animationControllers = [];
+  List<Animation<double>> animations = [];
+
   @override
   void initState() {
     super.initState();
     // Initialize all items as collapsed
     expandedStates = List.generate(faqData.length, (index) => false);
+
+    // Initialize animation controllers for each FAQ item
+    animationControllers = List.generate(
+      faqData.length,
+      (index) => AnimationController(
+        duration: Duration(milliseconds: 400),
+        vsync: this,
+      ),
+    );
+
+    // Initialize animations with curves
+    animations = animationControllers.map((controller) {
+      return CurvedAnimation(parent: controller, curve: Curves.easeInOutCubic);
+    }).toList();
+  }
+
+  @override
+  void dispose() {
+    // Dispose all animation controllers
+    for (var controller in animationControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         iconTheme: IconThemeData(color: Colors.white),
         centerTitle: true,
         title: Text(
-          'Frequently Asked Questions',
+          'FAQ',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Find answers to commonly asked questions about PITX services and facilities.',
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            SizedBox(height: 20),
-            // FAQ Accordion List
-            ...faqData.asMap().entries.map((entry) {
-              int index = entry.key;
-              Map<String, String> faq = entry.value;
-
-              return Card(
-                margin: EdgeInsets.only(bottom: 8),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    InkWell(
-                      onTap: () {
-                        setState(() {
-                          expandedStates[index] = !expandedStates[index];
-                        });
-                      },
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                faq['question']!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              expandedStates[index]
-                                  ? Icons.keyboard_arrow_up
-                                  : Icons.keyboard_arrow_down,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    AnimatedContainer(
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                      height: expandedStates[index] ? null : 0,
-                      child: expandedStates[index]
-                          ? Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                              decoration: BoxDecoration(
-                                border: Border(
-                                  top: BorderSide(
-                                    color: Colors.grey[300]!,
-                                    width: 1,
-                                  ),
-                                ),
-                              ),
-                              child: Text(
-                                faq['answer']!,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[700],
-                                  height: 1.4,
-                                ),
-                              ),
-                            )
-                          : SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-            SizedBox(height: 20),
-            // Contact section
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Theme.of(context).primaryColor.withOpacity(0.3),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Still have questions?',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).primaryColor,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Contact our customer service team for additional assistance.',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                  ),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.phone,
-                        size: 16,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        '(02) 8-PITX-BUS (748-9287)',
-                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.email,
-                        size: 16,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      SizedBox(width: 8),
-                      Text(
-                        'info@pitx.com.ph',
-                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                      ),
-                    ],
-                  ),
+      body: Column(
+        children: [
+          // Modern hero section with gradient
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withOpacity(0.8),
                 ],
               ),
             ),
-          ],
-        ),
+            child: Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "Help & Support",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Frequently Asked Questions',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Find answers to commonly asked questions about PITX services and facilities',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.9),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Content section
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(color: Colors.grey[50]),
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Modern FAQ Accordion List
+                    ...faqData.asMap().entries.map((entry) {
+                      int index = entry.key;
+                      Map<String, String> faq = entry.value;
+
+                      return Container(
+                        margin: EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  expandedStates[index] =
+                                      !expandedStates[index];
+                                  if (expandedStates[index]) {
+                                    animationControllers[index].forward();
+                                  } else {
+                                    animationControllers[index].reverse();
+                                  }
+                                });
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: EdgeInsets.all(20),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.help_outline,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        faq['question']!,
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                    AnimatedBuilder(
+                                      animation: animations[index],
+                                      builder: (context, child) {
+                                        return Transform.rotate(
+                                          angle:
+                                              animations[index].value *
+                                              3.14159, // 180 degrees in radians
+                                          child: Container(
+                                            padding: EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              color: expandedStates[index]
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                  : Colors.grey[100],
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            child: Icon(
+                                              Icons.keyboard_arrow_down,
+                                              color: expandedStates[index]
+                                                  ? Colors.white
+                                                  : Colors.grey[600],
+                                              size: 20,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizeTransition(
+                              sizeFactor: animations[index],
+                              child: FadeTransition(
+                                opacity: animations[index],
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      top: BorderSide(
+                                        color: Colors.grey.withOpacity(0.2),
+                                        width: 1,
+                                      ),
+                                    ),
+                                  ),
+                                  child: AnimatedBuilder(
+                                    animation: animations[index],
+                                    builder: (context, child) {
+                                      return Transform.translate(
+                                        offset: Offset(
+                                          0,
+                                          (1 - animations[index].value) * 10,
+                                        ),
+                                        child: Text(
+                                          faq['answer']!,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[700],
+                                            height: 1.5,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+
+                    SizedBox(height: 32),
+                    // Modern contact section
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.1),
+                            Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.05),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.2),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.support_agent,
+                                  color: Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                              SizedBox(width: 12),
+                              Text(
+                                'Still have questions?',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 12),
+                          Text(
+                            'Contact our customer service team for additional assistance.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          Container(
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.phone,
+                                        size: 18,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      '(02) 8-PITX-BUS (748-9287)',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.email,
+                                        size: 18,
+                                        color: Colors.blue,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      'info@pitx.com.ph',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Add extra bottom padding
+                    SizedBox(height: 32),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
