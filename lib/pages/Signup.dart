@@ -15,7 +15,8 @@ class _SignupState extends State<Signup> {
   bool _isPasswordVisible = false;
   final TextEditingController _phoneController = TextEditingController();
 
-  bool get _isFormValid => _phoneController.text.isNotEmpty;
+  bool get _isFormValid =>
+      _phoneController.text.isNotEmpty && _phoneController.text.length == 10;
 
   @override
   void dispose() {

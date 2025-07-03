@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -14,8 +13,7 @@ class _ProfileState extends State<Profile> {
 
   Future<void> _signOut() async {
     try {
-      await supabase.auth.signOut();
-      AuthManager.setLoggedIn(false);
+      await AuthManager.logout();
       Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
     } catch (e) {
       print("Error signing out: $e");

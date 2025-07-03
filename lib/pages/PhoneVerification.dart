@@ -34,6 +34,7 @@ class _PhoneVerificationState extends State<PhoneVerification> {
     print("===========SEND OTP===========");
     _sendOtp();
     _startResendTimer(); // Always start timer regardless of OTP success/failure
+    _focusNodes[0].requestFocus();
   }
 
   void _startResendTimer() {
@@ -434,39 +435,68 @@ class _PhoneVerificationState extends State<PhoneVerification> {
       width: 48,
       child: AspectRatio(
         aspectRatio: 0.8,
-        child: TextField(
-          controller: _otpControllers[index],
-          focusNode: _focusNodes[index],
-          keyboardType: TextInputType.number,
-          textAlign: TextAlign.center,
-          maxLength: 1,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          decoration: InputDecoration(
-            counter: const Offstage(),
-            contentPadding: EdgeInsets.zero,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: Colors.grey[300]!),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              ),
-            ),
-            filled: true,
-            fillColor: Colors.grey[50],
-          ),
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onChanged: (value) {
-            if (value.isNotEmpty && index < 5) {
-              _focusNodes[index + 1].requestFocus();
+        child: RawKeyboardListener(
+          focusNode: FocusNode(),
+          onKey: (event) {
+            if (event is RawKeyDownEvent) {
+              if (event.logicalKey == LogicalKeyboardKey.backspace) {
+                // Handle backspace: clear current field and move to previous
+                if (_otpControllers[index].text.isNotEmpty) {
+                  _otpControllers[index].clear();
+                  setState(() {});
+                } else if (index > 0) {
+                  _focusNodes[index - 1].requestFocus();
+                  _otpControllers[index - 1].clear();
+                  setState(() {});
+                }
+              }
             }
-
-            // Update form validation state
-            setState(() {});
           },
+          child: TextField(
+            controller: _otpControllers[index],
+            focusNode: _focusNodes[index],
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            maxLength: 1,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              counter: const Offstage(),
+              contentPadding: EdgeInsets.zero,
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.grey[300]!),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
+              ),
+              filled: true,
+              fillColor: Colors.grey[50],
+            ),
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(1),
+            ],
+            onTap: () {
+              // Select all text when tapping on field with existing content
+              if (_otpControllers[index].text.isNotEmpty) {
+                _otpControllers[index].selection = TextSelection(
+                  baseOffset: 0,
+                  extentOffset: _otpControllers[index].text.length,
+                );
+              }
+            },
+            onChanged: (value) {
+              if (value.isNotEmpty && index < 5) {
+                _focusNodes[index + 1].requestFocus();
+              }
+              // Update form validation state
+              setState(() {});
+            },
+          ),
         ),
       ),
     );
