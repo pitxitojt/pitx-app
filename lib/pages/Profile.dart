@@ -34,7 +34,18 @@ class _ProfileState extends State<Profile> {
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
       body: Container(
-        decoration: BoxDecoration(color: Colors.grey[50]),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              Colors.white,
+            ],
+            stops: [0.0, 0.5, 0.7],
+          ),
+        ),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,16 +54,7 @@ class _ProfileState extends State<Profile> {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                    ],
-                  ),
-                ),
+                decoration: BoxDecoration(color: Colors.transparent),
                 child: Column(
                   children: [
                     Container(
@@ -124,203 +126,216 @@ class _ProfileState extends State<Profile> {
               ),
 
               // Content section
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Modern menu items
-                    ...menuItems.map((item) {
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 12),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Modern menu items
+                      ...menuItems.map((item) {
+                        return Container(
+                          margin: EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                print("Tapped on ${item['label']}");
+                                if (item['label'] == 'Logout') {
+                                  // Set logged out state and navigate to welcome screen
+                                  AuthManager.setLoggedIn(false);
+                                  Navigator.pushNamedAndRemoveUntil(
+                                    context,
+                                    '/',
+                                    (route) => false,
+                                  );
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(16),
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        item['icon'],
+                                        size: 16,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        item['label'],
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.all(3),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[100],
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+
+                      SizedBox(height: 24),
+
+                      // Modern info section
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(18),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.1),
+                              Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.05),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.2),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.1),
                               blurRadius: 8,
                               offset: Offset(0, 4),
                             ),
                           ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              print("Tapped on ${item['label']}");
-                              if (item['label'] == 'Logout') {
-                                // Set logged out state and navigate to welcome screen
-                                AuthManager.setLoggedIn(false);
-                                Navigator.pushNamedAndRemoveUntil(
-                                  context,
-                                  '/',
-                                  (route) => false,
-                                );
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(16),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(
-                                      item['icon'],
-                                      size: 16,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      item['label'],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
+                                  child: Icon(
+                                    Icons.info_outline,
+                                    color: Colors.white,
+                                    size: 16,
                                   ),
-                                  Container(
-                                    padding: EdgeInsets.all(3),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[100],
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Icon(
-                                      Icons.arrow_forward_ios,
-                                      size: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-
-                    SizedBox(height: 24),
-
-                    // Modern info section
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.1),
-                            Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.05),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.primary.withOpacity(0.2),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(6),
                                 ),
-                                child: Icon(
-                                  Icons.info_outline,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                              SizedBox(width: 10),
-                              Text(
-                                'PITX Mobile App',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Your gateway to seamless travel experiences at the Philippines\' first-ever landport terminal.',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
-                              height: 1.3,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Version 1.0.0',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  'Up to date',
+                                SizedBox(width: 10),
+                                Text(
+                                  'PITX Mobile App',
                                   style: TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
                                   ),
                                 ),
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Your gateway to seamless travel experiences at the Philippines\' first-ever landport terminal.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[700],
+                                height: 1.3,
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Version 1.0.0',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey[600],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    'Up to date',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
 
-                    // Add extra bottom padding
-                    SizedBox(height: 32),
-                  ],
+                      // Add extra bottom padding
+                      SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ],

@@ -74,31 +74,6 @@ class _BusOperatorsState extends State<BusOperators> {
             fontSize: 16,
           ),
         ),
-        actions: [
-          Container(
-            margin: EdgeInsets.only(right: 16),
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.bookmark_border, size: 16, color: Colors.white),
-                SizedBox(width: 4),
-                Text(
-                  'Saved',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -106,28 +81,60 @@ class _BusOperatorsState extends State<BusOperators> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).primaryColor,
-              Theme.of(context).primaryColor.withOpacity(0.8),
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withOpacity(0.8),
               Colors.white,
             ],
-            stops: [0.0, 0.3, 0.4],
+            stops: [0.0, 0.5, 0.7],
           ),
         ),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Quick action icons
-              Container(
-                padding: EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              // Header text centered with styled container
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    _buildQuickAction(Icons.luggage, 'Lost\nBaggage'),
-                    _buildQuickAction(Icons.schedule, 'Duty-Free\nSchedule'),
-                    _buildQuickAction(Icons.people, 'Travel\nCompanion'),
-                    _buildQuickAction(
-                      Icons.medical_services,
-                      'Travel\nConcierge',
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Bus Routes",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Find Your Journey',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Explore available bus operators and routes',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                        letterSpacing: 0.2,
+                      ),
                     ),
                   ],
                 ),
@@ -151,28 +158,43 @@ class _BusOperatorsState extends State<BusOperators> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'FIND YOUR BUS',
+                            'Find Your Bus',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 18,
                               color: Colors.black87,
+                              letterSpacing: 0.2,
                             ),
                           ),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.qr_code_scanner,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Scan',
-                                style: TextStyle(
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.qr_code_scanner,
                                   color: Theme.of(context).primaryColor,
-                                  fontWeight: FontWeight.w600,
+                                  size: 18,
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 6),
+                                Text(
+                                  'Scan',
+                                  style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -360,27 +382,6 @@ class _BusOperatorsState extends State<BusOperators> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildQuickAction(IconData icon, String label) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icon, color: Colors.white, size: 24),
-        ),
-        SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(color: Colors.white, fontSize: 11),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 

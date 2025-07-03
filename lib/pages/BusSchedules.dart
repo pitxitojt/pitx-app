@@ -469,7 +469,18 @@ class _BusSchedulesState extends State<BusSchedules> {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(color: Colors.grey[50]),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Theme.of(context).colorScheme.primary,
+              Theme.of(context).colorScheme.primary.withOpacity(0.8),
+              Colors.white,
+            ],
+            stops: [0.0, 0.5, 0.7],
+          ),
+        ),
         child: SingleChildScrollView(
           physics: AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -478,16 +489,7 @@ class _BusSchedulesState extends State<BusSchedules> {
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                    ],
-                  ),
-                ),
+                decoration: BoxDecoration(color: Colors.transparent),
                 child: Column(
                   children: [
                     Container(
@@ -530,18 +532,27 @@ class _BusSchedulesState extends State<BusSchedules> {
               ),
 
               // Schedule content
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    buildTableHeader(),
-                    SizedBox(height: 8),
-                    ...busScheduleData
-                        .map((timeData) => buildTimeSection(timeData))
-                        .toList(),
-                    // Add extra bottom padding for better scrolling experience
-                    SizedBox(height: 32),
-                  ],
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      buildTableHeader(),
+                      SizedBox(height: 8),
+                      ...busScheduleData
+                          .map((timeData) => buildTimeSection(timeData))
+                          .toList(),
+                      // Add extra bottom padding for better scrolling experience
+                      SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               ),
             ],
