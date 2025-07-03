@@ -20,6 +20,74 @@ class _ProfileState extends State<Profile> {
     }
   }
 
+  Future<void> _showLogoutConfirmation() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // User must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.logout,
+                color: Theme.of(context).colorScheme.primary,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Confirm Logout',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+              ),
+              child: const Text(
+                'Logout',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              onPressed: () async {
+                Navigator.of(context).pop(); // Close the dialog
+                await _signOut(); // Proceed with logout
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   final List<Map<String, dynamic>> menuItems = [
     {'label': 'About PITX', 'icon': Icons.info, 'page': null},
     {'label': 'Contact Us', 'icon': Icons.phone, 'page': null},
@@ -172,8 +240,8 @@ class _ProfileState extends State<Profile> {
                               onTap: () async {
                                 print("Tapped on ${item['label']}");
                                 if (item['label'] == 'Logout') {
-                                  // Set logged out state and navigate to welcome screen
-                                  await _signOut();
+                                  // Show confirmation dialog before logout
+                                  await _showLogoutConfirmation();
                                 }
                               },
                               borderRadius: BorderRadius.circular(16),

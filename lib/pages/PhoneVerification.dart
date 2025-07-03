@@ -66,11 +66,6 @@ class _PhoneVerificationState extends State<PhoneVerification> {
     } catch (e) {
       print("OTP sending failed: $e");
       // Show demo message when OTP is disabled
-      if (e.toString().contains('otp_disabled')) {
-        setState(() {
-          _errorMessage = "Demo mode: Use code '123456' to verify";
-        });
-      }
     }
     // Note: Timer is now started in initState() to ensure it always runs
   }
