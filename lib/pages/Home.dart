@@ -123,135 +123,135 @@ class _HomeState extends State<Home> {
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-          Stack(
-            children: [
-              // Black background image
-              Container(
-                width: double.infinity,
-                height: 200,
-                color: Colors.black,
-              ),
-              SizedBox(
-                width: double.infinity,
-                height: 225,
-                child: Opacity(
-                  opacity: 0.8,
-                  child: Image.asset('assets/bays.jpg', fit: BoxFit.cover),
+            Stack(
+              children: [
+                // Black background image
+                Container(
+                  width: double.infinity,
+                  height: 200,
+                  color: Colors.black,
                 ),
-              ),
-              Positioned(
-                bottom: 18,
-                left: 18,
-                child: SizedBox(
-                  width: 210,
-                  child: Text(
-                    "first-ever landport in the country",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                    ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 225,
+                  child: Opacity(
+                    opacity: 0.8,
+                    child: Image.asset('assets/bays.jpg', fit: BoxFit.cover),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: Home.menu.map((item) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  InkWell(
-                    onTap: () {
-                      // Handle tap on menu item
-
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return item['page'] ??
-                                Container(); // Navigate to page or do nothing
-                          },
-                        ),
-                      );
-
-                      print("Tapped on ${item['label']}");
-                    },
-                    borderRadius: BorderRadius.circular(
-                      999,
-                    ), // ripple stays circular
-                    child: Container(
-                      width: 55,
-                      height: 55,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          item['icon'],
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 25,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-                  // FIXED HEIGHT Text area
-                  SizedBox(
-                    width: 80,
-                    height:
-                        34, // fixed height to allow 2 lines max (adjust as needed)
+                Positioned(
+                  bottom: 18,
+                  left: 18,
+                  child: SizedBox(
+                    width: 210,
                     child: Text(
-                      item['label'],
-                      textAlign: TextAlign.center,
-                      softWrap: true,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      style: const TextStyle(fontSize: 11),
+                      "first-ever landport in the country",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
-                ],
-              );
-            }).toList(),
-          ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: Home.menu.map((item) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        // Handle tap on menu item
 
-          const SizedBox(height: 16),
-          // ── HERE: Basic CarouselView ──
-          Padding(
-            padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Popular Destinations",
-                textAlign: TextAlign.left,
-                style: TextStyle(fontWeight: FontWeight.bold),
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) {
+                              return item['page'] ??
+                                  Container(); // Navigate to page or do nothing
+                            },
+                          ),
+                        );
+
+                        print("Tapped on ${item['label']}");
+                      },
+                      borderRadius: BorderRadius.circular(
+                        999,
+                      ), // ripple stays circular
+                      child: Container(
+                        width: 55,
+                        height: 55,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Icon(
+                            item['icon'],
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            size: 25,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+                    // FIXED HEIGHT Text area
+                    SizedBox(
+                      width: 80,
+                      height:
+                          34, // fixed height to allow 2 lines max (adjust as needed)
+                      child: Text(
+                        item['label'],
+                        textAlign: TextAlign.center,
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+
+            const SizedBox(height: 16),
+            // ── HERE: Basic CarouselView ──
+            Padding(
+              padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Popular Destinations",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          generateCarousel(Home.destinations),
-          const SizedBox(height: 16),
-          Padding(
-            padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Explore food options",
-                textAlign: TextAlign.left,
-                style: TextStyle(fontWeight: FontWeight.bold),
+            generateCarousel(Home.destinations),
+            const SizedBox(height: 16),
+            Padding(
+              padding: EdgeInsetsGeometry.fromLTRB(16, 0, 16, 0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Explore food options",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
 
-          generateCarousel(Home.foodOptions),
-        ],
+            generateCarousel(Home.foodOptions),
+          ],
         ),
       ),
     );

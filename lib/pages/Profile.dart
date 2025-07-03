@@ -34,68 +34,94 @@ class _ProfileState extends State<Profile> {
         backgroundColor: Theme.of(context).primaryColor,
       ),
       body: Padding(
-        padding: EdgeInsetsGeometry.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: () {
-                print("Profile tapped");
-              },
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                spacing: 16,
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(child: Icon(Icons.person, size: 25)),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 2,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  print("Profile tapped");
+                },
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    spacing: 16,
                     children: [
-                      Text(
-                        "JUAN DELA CRUZ",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          shape: BoxShape.circle,
                         ),
+                        child: Center(child: Icon(Icons.person, size: 25)),
                       ),
-                      Text("+639123456789", style: TextStyle(fontSize: 12)),
-                      Text("pitx@pitx.com.ph", style: TextStyle(fontSize: 12)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 2,
+                        children: [
+                          Text(
+                            "JUAN DELA CRUZ",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text("+639123456789", style: TextStyle(fontSize: 12)),
+                          Text(
+                            "pitx@pitx.com.ph",
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 24),
             ...menuItems.map((item) {
               return Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: GestureDetector(
-                  onTap: () {
-                    // Handle menu item tap
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        spacing: 8,
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      // Handle menu item tap
+                      print("Tapped on ${item['label']}");
+                    },
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 8,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(item['icon'], size: 18),
-                          Text(item['label'], style: TextStyle(fontSize: 12)),
+                          Row(
+                            spacing: 8,
+                            children: [
+                              Icon(item['icon'], size: 18),
+                              Text(
+                                item['label'],
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ],
                       ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               );
