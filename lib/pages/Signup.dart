@@ -113,7 +113,7 @@ class _SignupState extends State<Signup> {
                       Row(
                         children: [
                           Text(
-                            'Email Address',
+                            'Email',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -151,7 +151,7 @@ class _SignupState extends State<Signup> {
                               horizontal: 16,
                               vertical: 16,
                             ),
-                            hintText: 'Enter your email address',
+                            hintText: 'Enter your email',
                             hintStyle: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 16,

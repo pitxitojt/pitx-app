@@ -106,14 +106,14 @@ class _LoginState extends State<Login> {
                 children: [
                   const SizedBox(height: 8),
 
-                  // Email field
+                  // Email or Mobile field
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Text(
-                            'Email Address',
+                            'Email or phone',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -151,7 +151,7 @@ class _LoginState extends State<Login> {
                               horizontal: 16,
                               vertical: 16,
                             ),
-                            hintText: 'Enter your email address',
+                            hintText: 'Enter your email or phone number',
                             hintStyle: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 16,
