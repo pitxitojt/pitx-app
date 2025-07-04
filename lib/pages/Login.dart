@@ -11,7 +11,6 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
-  bool _isPasswordVisible = false;
   late final TextEditingController _mobileController = TextEditingController();
   late final TextEditingController _passwordController =
       TextEditingController();
@@ -29,7 +28,7 @@ class _LoginState extends State<Login> {
   Future<void> _signIn() async {
     try {
       final mobile = _mobileController.text;
-      final response = await supabase.auth.signInWithOtp(phone: mobile);
+      await supabase.auth.signInWithOtp(phone: mobile);
       print("User logged in with mobile: ${_mobileController.text}");
     } catch (e) {
       print("Login failed: $e");
@@ -269,42 +268,6 @@ class _LoginState extends State<Login> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _SocialLoginButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(icon, color: Colors.grey[700], size: 24),
       ),
     );
   }

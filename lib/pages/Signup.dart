@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pitx/pages/PhoneVerification.dart';
-import 'package:pitx/pages/ProfileCompletion.dart';
 import 'package:country_flags/country_flags.dart';
 
 class Signup extends StatefulWidget {
@@ -12,7 +11,6 @@ class Signup extends StatefulWidget {
 }
 
 class _SignupState extends State<Signup> {
-  bool _isPasswordVisible = false;
   final TextEditingController _phoneController = TextEditingController();
 
   bool get _isFormValid =>
@@ -257,42 +255,6 @@ class _SignupState extends State<Signup> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SocialLoginButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  const _SocialLoginButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[300]!, width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Icon(icon, color: Colors.grey[700], size: 24),
       ),
     );
   }

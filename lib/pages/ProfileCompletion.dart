@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:country_flags/country_flags.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:pitx/main.dart';
 
@@ -16,11 +15,8 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _dateOfBirthController = TextEditingController();
 
-  String? _selectedGender;
   String? _errorMessage;
   bool _isLoading = false;
-
-  final List<String> _genderOptions = ['Male', 'Female', 'Other'];
 
   bool get _isFormValid {
     final isValid =
@@ -389,72 +385,6 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
     );
   }
 
-  Widget _buildPhoneField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Mobile Number',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
-            Text(
-              ' *',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 8),
-        Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
-          ),
-          child: Row(
-            children: [
-              // Country code section
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CountryFlag.fromCountryCode(
-                      'PH',
-                      width: 20,
-                      height: 20,
-                      shape: Circle(),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '+63',
-                      style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                    ),
-                  ],
-                ),
-              ),
-              // Divider
-              Container(height: 24, width: 1, color: Colors.grey[300]),
-
-              // Phone number input
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildDateField() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -513,67 +443,6 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
                   ),
                 ),
               ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenderField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Gender',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[700],
-              ),
-            ),
-            Text(
-              ' *',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: 56,
-          decoration: BoxDecoration(
-            color: Colors.grey[50],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[300]!, width: 1),
-          ),
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: _selectedGender,
-              hint: Text(
-                'Select an option',
-                style: TextStyle(color: Colors.grey[500], fontSize: 16),
-              ),
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-              icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
-              items: _genderOptions.map((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _selectedGender = newValue;
-                });
-              },
             ),
           ),
         ),

@@ -4,7 +4,6 @@ import 'package:pitx/pages/BusSchedules.dart';
 import 'package:pitx/pages/FAQ.dart';
 import 'package:pitx/pages/Food.dart';
 import 'package:pitx/screens/Notifications.dart';
-import 'package:pitx/main.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
