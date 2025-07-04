@@ -180,34 +180,40 @@ class _BusSchedulesState extends State<BusSchedules>
   }
 
   String determineStatus(List<dynamic> item) {
-    // Status is at index 17
-    if (item.length > 17) {
-      String status = item[17]?.toString() ?? '';
-      if (status.isNotEmpty) {
-        return status.toUpperCase();
+    String status = item[17];
+    if (status == "") {
+      if (item[6] == "8") {
+        status = "ARRIVING";
+      } else if (item[6] == "0") {
+        status = "TBD";
+      } else if (item[6] == "7") {
+        status = "DELAYED";
       }
     }
-
-    // If index 17 is blank, check if within 30 minutes of schedule
-    if (item.length > 2) {
-      String timeStr = item[2]?.toString() ?? '';
-      if (timeStr.isNotEmpty) {
-        try {
-          // Parse the scheduled time using Manila timezone
-          DateTime manilaTime = _currentManilaTime;
-          DateTime scheduledTime = parseScheduledTime(timeStr);
-
-          // Check if current time is within 30 minutes before scheduled time
-          Duration difference = scheduledTime.difference(manilaTime);
-
-          if (difference.inMinutes <= 30 && difference.inMinutes >= 0) {
-            return 'ARRIVING';
-          }
-        } catch (e) {
-          print('Error parsing time: $e');
-        }
-      }
+    if (status.isNotEmpty) {
+      return status.toUpperCase();
     }
+
+    // // If index 17 is blank, check if within 30 minutes of schedule
+    // if (item.length > 2) {
+    //   String timeStr = item[2]?.toString() ?? '';
+    //   if (timeStr.isNotEmpty) {
+    //     try {
+    //       // Parse the scheduled time using Manila timezone
+    //       DateTime manilaTime = _currentManilaTime;
+    //       DateTime scheduledTime = parseScheduledTime(timeStr);
+
+    //       // Check if current time is within 30 minutes before scheduled time
+    //       Duration difference = scheduledTime.difference(manilaTime);
+
+    //       if (difference.inMinutes <= 30 && difference.inMinutes >= 0) {
+    //         return 'ARRIVING';
+    //       }
+    //     } catch (e) {
+    //       print('Error parsing time: $e');
+    //     }
+    //   }
+    // }
 
     return 'TBD'; // Default status if not within 30 minutes or time parsing fails
   }
@@ -318,12 +324,12 @@ class _BusSchedulesState extends State<BusSchedules>
         return Color(0xFF10B981); // Modern green
       case 'CANCELLED':
         return Color(0xFFEF4444); // Modern red
-      case 'ON TIME':
+      case 'TBD':
         return Color(0xFF3B82F6); // Modern blue
       case 'DELAYED':
         return Color(0xFFF59E0B); // Modern amber
       default:
-        return Color(0xFF3B82F6); // Default modern blue
+        return Color(0xFFEF4444); // Default modern blue
     }
   }
 
