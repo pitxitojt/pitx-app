@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
 
 class BusSchedules extends StatefulWidget {
   const BusSchedules({super.key});
@@ -9,79 +12,281 @@ class BusSchedules extends StatefulWidget {
 
 class _BusSchedulesState extends State<BusSchedules> {
   // Dummy data for bus schedules
-  final List<Map<String, dynamic>> busScheduleData = [
-    {
-      'time': '08:30 AM',
-      'schedules': [
-        {
-          'operator': 'SOLID NORTH',
-          'route': 'SAN CARLOS CITY',
-          'gate': '4',
-          'bay': '20',
-          'status': 'CANCELLED',
-        },
-      ],
-    },
-    {
-      'time': '09:00 AM',
-      'schedules': [
-        {
-          'operator': 'PHILTRANCO',
-          'route': 'DAVAO CITY',
-          'gate': '2',
-          'bay': '8',
-          'status': 'ARRIVING',
-        },
-        {
-          'operator': 'DAVAO METRO SHUTTLE',
-          'route': 'DAVAO CITY',
-          'gate': '2',
-          'bay': '9',
-          'status': 'CANCELLED',
-        },
-        {
-          'operator': 'SOLID NORTH',
-          'route': 'BAGUIO CITY',
-          'gate': '4',
-          'bay': '20',
-          'status': 'CANCELLED',
-        },
-        {
-          'operator': 'SOLID NORTH',
-          'route': 'DAGUPAN CITY',
-          'gate': '4',
-          'bay': '21',
-          'status': 'ARRIVING',
-        },
-        {
-          'operator': 'SUPERLINES',
-          'route': 'DAET',
-          'gate': '4',
-          'bay': '23',
-          'status': 'ARRIVING',
-        },
-      ],
-    },
-    {
-      'time': '09:30 AM',
-      'schedules': [
-        {
-          'operator': 'VICTORY LINER',
-          'route': 'BAGUIO CITY',
-          'gate': '3',
-          'bay': '15',
-          'status': 'ON TIME',
-        },
-        {
-          'operator': 'GENESIS',
-          'route': 'TUGUEGARAO',
-          'gate': '5',
-          'bay': '25',
-          'status': 'DELAYED',
-        },
-      ],
-    },
-  ];
+  List<Map<String, dynamic>>? _schedules;
+  String? _errorMessage = null;
+  bool _isLoading = true;
+  Timer? _refreshTimer;
+
+  // Transform API data into the expected format
+  List<Map<String, dynamic>> transformApiData(List<dynamic> apiData) {
+    Map<String, List<Map<String, dynamic>>> groupedByTime = {};
+
+    // Get current Manila time for filtering
+    DateTime utcNow = DateTime.now().toUtc();
+    DateTime manilaTime = utcNow.add(Duration(hours: 8));
+
+    for (var item in apiData) {
+      if (item is List && item.length >= 6) {
+        String time = item[2] ?? ''; // Time is at index 2
+        String operatorCode = item[0] ?? ''; // Operator code at index 0
+        String operator = item.length > 10
+            ? (item[10] ?? operatorCode)
+            : operatorCode; // Full name at index 10
+        String route = item[3] ?? ''; // Route name at index 3
+        String gate = item[4] ?? ''; // Gate at index 4
+        String bay = item[5] ?? ''; // Bay at index 5
+
+        // Remove the | at the end of route if it exists
+        route = route.replaceAll('|', '');
+
+        // Determine status based on available data
+        String status = determineStatus(item);
+
+        // Check if this schedule should be included
+        bool shouldInclude = shouldIncludeSchedule(time, status, manilaTime);
+
+        if (shouldInclude) {
+          Map<String, dynamic> schedule = {
+            'operator': operator,
+            'route': route,
+            'gate': gate,
+            'bay': bay,
+            'status': status,
+          };
+
+          if (!groupedByTime.containsKey(time)) {
+            groupedByTime[time] = [];
+          }
+          groupedByTime[time]!.add(schedule);
+        }
+      }
+    }
+
+    // Convert grouped data to the expected format and sort schedules within each time
+    List<Map<String, dynamic>> result = [];
+    groupedByTime.forEach((time, schedules) {
+      // Sort schedules within this time group by gate and bay
+      schedules.sort((a, b) => compareGateAndBay(a, b));
+      result.add({'time': time, 'schedules': schedules});
+    });
+
+    // Sort by time - AM first, then PM, both in ascending order
+    result.sort((a, b) => compareTimeStrings(a['time'], b['time']));
+
+    return result;
+  }
+
+  // Helper function to compare schedules by gate and bay numbers
+  int compareGateAndBay(Map<String, dynamic> a, Map<String, dynamic> b) {
+    // Extract gate numbers
+    int gateA = extractNumber(a['gate'] ?? '');
+    int gateB = extractNumber(b['gate'] ?? '');
+
+    // First sort by gate
+    if (gateA != gateB) {
+      return gateA.compareTo(gateB);
+    }
+
+    // If gates are the same, sort by bay
+    int bayA = extractNumber(a['bay'] ?? '');
+    int bayB = extractNumber(b['bay'] ?? '');
+
+    return bayA.compareTo(bayB);
+  }
+
+  // Helper function to extract numbers from strings like "G05", "D35", etc.
+  int extractNumber(String text) {
+    if (text.isEmpty) return 0;
+
+    // Remove all non-digit characters and parse the number
+    String numbers = text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (numbers.isEmpty) return 0;
+
+    try {
+      return int.parse(numbers);
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  // Helper function to determine if a schedule should be included
+  bool shouldIncludeSchedule(
+    String timeStr,
+    String status,
+    DateTime manilaTime,
+  ) {
+    try {
+      DateTime scheduledTime = parseScheduledTime(timeStr);
+
+      // Always include cancelled schedules regardless of time
+      if (status.toUpperCase() == 'CANCELLED') {
+        return true;
+      }
+
+      // For non-cancelled schedules, only include if not yet passed
+      bool hasNotPassed = scheduledTime.isAfter(manilaTime);
+
+      return hasNotPassed;
+    } catch (e) {
+      // If we can't parse the time, include it to be safe
+      return true;
+    }
+  }
+
+  // Helper function to compare time strings properly
+  int compareTimeStrings(String timeA, String timeB) {
+    try {
+      // Parse both times
+      DateTime parsedTimeA = parseScheduledTime(timeA);
+      DateTime parsedTimeB = parseScheduledTime(timeB);
+
+      // Get hours in 24-hour format for comparison
+      int hourA = parsedTimeA.hour;
+      int hourB = parsedTimeB.hour;
+      int minuteA = parsedTimeA.minute;
+      int minuteB = parsedTimeB.minute;
+
+      // Create comparable values (AM times: 0-11, PM times: 12-23)
+      int comparableA = hourA * 60 + minuteA;
+      int comparableB = hourB * 60 + minuteB;
+
+      return comparableA.compareTo(comparableB);
+    } catch (e) {
+      // If parsing fails, fall back to string comparison
+      return timeA.compareTo(timeB);
+    }
+  }
+
+  String determineStatus(List<dynamic> item) {
+    // Status is at index 17
+    if (item.length > 17) {
+      String status = item[17]?.toString() ?? '';
+      if (status.isNotEmpty) {
+        return status.toUpperCase();
+      }
+    }
+
+    // If index 17 is blank, check if within 30 minutes of schedule
+    if (item.length > 2) {
+      String timeStr = item[2]?.toString() ?? '';
+      if (timeStr.isNotEmpty) {
+        try {
+          // Parse the scheduled time - use Manila time (UTC+8)
+          DateTime utcNow = DateTime.now().toUtc();
+          DateTime manilaTime = utcNow.add(
+            Duration(hours: 8),
+          ); // UTC+8 for Manila
+          DateTime scheduledTime = parseScheduledTime(timeStr);
+
+          // Check if current time is within 30 minutes before scheduled time
+          Duration difference = scheduledTime.difference(manilaTime);
+
+          if (difference.inMinutes <= 30 && difference.inMinutes >= 0) {
+            return 'ARRIVING';
+          }
+        } catch (e) {
+          print('Error parsing time: $e');
+        }
+      }
+    }
+
+    return 'TBD'; // Default status if not within 30 minutes or time parsing fails
+  }
+
+  // Helper function to parse scheduled time
+  DateTime parseScheduledTime(String timeStr) {
+    // Get Manila time (UTC+8)
+    DateTime utcNow = DateTime.now().toUtc();
+    DateTime manilaTime = utcNow.add(Duration(hours: 8));
+
+    // Remove any extra spaces and convert to uppercase
+    timeStr = timeStr.trim().toUpperCase();
+
+    // Extract time components
+    bool isPM = timeStr.contains('PM');
+    bool isAM = timeStr.contains('AM');
+
+    // Remove AM/PM and clean the string
+    String cleanTime = timeStr.replaceAll('AM', '').replaceAll('PM', '').trim();
+
+    // Split by colon
+    List<String> parts = cleanTime.split(':');
+    if (parts.length >= 2) {
+      int hour = int.parse(parts[0]);
+      int minute = int.parse(parts[1]);
+
+      // Convert to 24-hour format
+      if (isPM && hour != 12) {
+        hour += 12;
+      } else if (isAM && hour == 12) {
+        hour = 0;
+      }
+
+      // Create DateTime for today with the parsed time using Manila date
+      DateTime result = DateTime(
+        manilaTime.year,
+        manilaTime.month,
+        manilaTime.day,
+        hour,
+        minute,
+      );
+      return result;
+    }
+
+    throw FormatException('Invalid time format: $timeStr');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchSchedules();
+    _startRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startRefreshTimer() {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      fetchSchedules(showLoading: false);
+    });
+  }
+
+  Future<void> fetchSchedules({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+    try {
+      final url =
+          "https://www.pitx.ph/wp-content/themes/sunday-elephant-child-theme/includes/php/departures.php";
+      final response = await http.post(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final jsonData = jsonDecode(response.body);
+        final rawSchedules = jsonData['result'];
+
+        final transformedData = transformApiData(rawSchedules);
+
+        setState(() {
+          _schedules = transformedData;
+          _errorMessage = null;
+        });
+      } else {
+        setState(
+          () => _errorMessage = 'Failed to fetch data: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Failed to fetch data: $e');
+    }
+    if (showLoading) {
+      setState(() => _isLoading = false);
+    }
+  }
 
   Color getStatusColor(String status) {
     switch (status.toUpperCase()) {
@@ -93,10 +298,6 @@ class _BusSchedulesState extends State<BusSchedules> {
         return Color(0xFF3B82F6); // Modern blue
       case 'DELAYED':
         return Color(0xFFF59E0B); // Modern amber
-      case 'BOARDING':
-        return Color(0xFF8B5CF6); // Modern purple
-      case 'DEPARTED':
-        return Color(0xFF6B7280); // Modern gray
       default:
         return Color(0xFF3B82F6); // Default modern blue
     }
@@ -148,7 +349,7 @@ class _BusSchedulesState extends State<BusSchedules> {
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Operator
             Expanded(
@@ -165,20 +366,18 @@ class _BusSchedulesState extends State<BusSchedules> {
               ),
             ),
             SizedBox(width: 8),
-            // Route
+            // Route with text wrapping for long destination names
             Expanded(
               flex: 3,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  schedule['route'],
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
+              child: Text(
+                schedule['route'],
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.black87,
+                  fontWeight: FontWeight.w500,
                 ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             // Gate
@@ -194,7 +393,7 @@ class _BusSchedulesState extends State<BusSchedules> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      schedule['gate'],
+                      '${extractNumber(schedule['gate'])}',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -219,7 +418,7 @@ class _BusSchedulesState extends State<BusSchedules> {
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
-                      schedule['bay'],
+                      '${extractNumber(schedule['bay'])}',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -385,16 +584,12 @@ class _BusSchedulesState extends State<BusSchedules> {
           ),
           Expanded(
             flex: 3,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Destination',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+            child: Text(
+              'Destination',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
           ),
@@ -468,97 +663,121 @@ class _BusSchedulesState extends State<BusSchedules> {
           ),
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primary.withOpacity(0.8),
-              Colors.white,
-            ],
-            stops: [0.0, 0.5, 0.7],
-          ),
-        ),
-        child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              // Modern date header with gradient (now in scrollable content)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(color: Colors.transparent),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                    Colors.white,
+                  ],
+                  stops: [0.0, 0.5, 0.7],
+                ),
+              ),
+              child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
+                    // Modern date header with gradient (now in scrollable content)
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                      width: double.infinity,
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(color: Colors.transparent),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "Live Schedules",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            getCurrentDate(),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            "Real-time bus schedule information",
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+
+                    // Schedule content
+                    Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        "Live Schedules",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
                         ),
                       ),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      getCurrentDate(),
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      "Real-time bus schedule information",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Column(
+                          children: _errorMessage != null
+                              ? [
+                                  Container(
+                                    padding: EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      _errorMessage!,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: 16),
+                                ]
+                              : [
+                                  buildTableHeader(),
+                                  SizedBox(height: 8),
+                                  ...(_schedules ?? [])
+                                      .map(
+                                        (timeData) =>
+                                            buildTimeSection(timeData),
+                                      )
+                                      .toList(),
+                                  // Add extra bottom padding for better scrolling experience
+                                  SizedBox(height: 32),
+                                ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              // Schedule content
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      buildTableHeader(),
-                      SizedBox(height: 8),
-                      ...busScheduleData
-                          .map((timeData) => buildTimeSection(timeData))
-                          .toList(),
-                      // Add extra bottom padding for better scrolling experience
-                      SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

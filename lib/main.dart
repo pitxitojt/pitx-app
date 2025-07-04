@@ -11,6 +11,8 @@ import 'package:pitx/pages/Signup.dart';
 import 'package:pitx/pages/ProfileCompletion.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // Utility class to manage authentication state
 class AuthManager {
@@ -54,6 +56,21 @@ class AuthManager {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
+  final url =
+      'https://www.pitx.ph/wp-content/themes/sunday-elephant-child-theme/includes/php/departures.php';
+  final headers = {};
+
+  try {
+    final response = await http.post(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print("=====Data=====");
+      print(data);
+      // You can process the response data here if needed
+    } else {
+      print("Failed to fetch data: ${response.statusCode}");
+    }
+  } catch (e) {}
   await Supabase.initialize(
     url: 'SUPABASE_URL',
     anonKey:
