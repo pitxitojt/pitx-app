@@ -141,24 +141,77 @@ Widget generateCarousel(
   );
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with WidgetsBindingObserver {
   int _unreadNotificationCount = 0;
+  RealtimeChannel? _channel;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _fetchNotificationCount();
-    supabase
-        .channel('public:notifications')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'notifications',
-          callback: (payload) async {
-            await _fetchNotificationCount();
-          },
-        )
-        .subscribe();
+    _setupRealtimeSubscription();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _channel?.unsubscribe();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App is back from background - reconnect subscription
+        _reconnectSubscription();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        // App is going to background - no action needed
+        break;
+    }
+  }
+
+  void _reconnectSubscription() {
+    // Unsubscribe existing channel
+    _channel?.unsubscribe();
+
+    // Wait a bit for cleanup then reconnect
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _setupRealtimeSubscription();
+        _fetchNotificationCount(); // Refresh data
+      }
+    });
+  }
+
+  void _setupRealtimeSubscription() {
+    try {
+      _channel = supabase
+          .channel(
+            'public:notifications_${DateTime.now().millisecondsSinceEpoch}',
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'notifications',
+            callback: (payload) async {
+              print('Notification payload: $payload');
+              if (mounted) {
+                await _fetchNotificationCount();
+              }
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      print('Error setting up subscription: $e');
+    }
   }
 
   Future<void> _fetchNotificationCount() async {
@@ -171,9 +224,11 @@ class _HomeState extends State<Home> {
             .eq('user_id', user.id)
             .eq('is_read', false);
 
-        setState(() {
-          _unreadNotificationCount = response.length;
-        });
+        if (mounted) {
+          setState(() {
+            _unreadNotificationCount = response.length;
+          });
+        }
       }
     } catch (e) {
       print('Error fetching notification count: $e');

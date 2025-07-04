@@ -9,23 +9,79 @@ class Notifications extends StatefulWidget {
   State<Notifications> createState() => _NotificationsState();
 }
 
-class _NotificationsState extends State<Notifications> {
+class _NotificationsState extends State<Notifications>
+    with WidgetsBindingObserver {
   List<Map<String, dynamic>> notifications = [];
   bool _isLoading = true;
+  RealtimeChannel? _channel;
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     fetchNotifications();
-    supabase
-        .channel('public:notifications')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'notifications',
-          callback: (payload) async {
-            await fetchNotifications();
-          },
-        )
-        .subscribe();
+    _setupRealtimeSubscription();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _channel?.unsubscribe();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // App is back from background - reconnect subscription
+        _reconnectSubscription();
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        // App is going to background - no action needed
+        break;
+    }
+  }
+
+  void _reconnectSubscription() {
+    // Unsubscribe existing channel
+    _channel?.unsubscribe();
+
+    // Wait a bit for cleanup then reconnect
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        _setupRealtimeSubscription();
+        fetchNotifications(); // Refresh data
+      }
+    });
+  }
+
+  void _setupRealtimeSubscription() {
+    try {
+      _channel = supabase
+          .channel(
+            'public:notifications_${DateTime.now().millisecondsSinceEpoch}',
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'notifications',
+            callback: (payload) async {
+              print('Notification payload: $payload');
+              if (mounted) {
+                await fetchNotifications();
+              }
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      print('Error setting up subscription: $e');
+    }
   }
 
   Future<void> fetchNotifications() async {
@@ -36,11 +92,14 @@ class _NotificationsState extends State<Notifications> {
           .select('created_at, title, body, is_read')
           .eq('user_id', user_id)
           .order('created_at', ascending: false);
-      setState(() {
-        notifications = List<Map<String, dynamic>>.from(
-          response as List<dynamic>,
-        );
-      });
+
+      if (mounted) {
+        setState(() {
+          notifications = List<Map<String, dynamic>>.from(
+            response as List<dynamic>,
+          );
+        });
+      }
 
       // update read status
       await supabase
@@ -52,9 +111,11 @@ class _NotificationsState extends State<Notifications> {
       print("Error fetching notifications: $e");
       // Handle error, maybe show a snackbar or dialog
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -289,7 +350,7 @@ class _NotificationsState extends State<Notifications> {
                           ),
                           SizedBox(width: 8),
                           Text(
-                            'Recent Notifications',
+                            'All Notifications',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -297,26 +358,6 @@ class _NotificationsState extends State<Notifications> {
                             ),
                           ),
                           Spacer(),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              _isLoading
-                                  ? 'Loading...'
-                                  : '${notifications.where((n) => !(n['is_read'] ?? false)).length} new',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       SizedBox(height: 16),
