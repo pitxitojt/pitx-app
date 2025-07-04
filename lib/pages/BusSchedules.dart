@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:async';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
 class BusSchedules extends StatefulWidget {
   const BusSchedules({super.key});
@@ -16,14 +18,32 @@ class _BusSchedulesState extends State<BusSchedules> {
   String? _errorMessage = null;
   bool _isLoading = true;
   Timer? _refreshTimer;
+  late tz.Location _manilaLocation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeTimezone();
+    fetchSchedules();
+    _startRefreshTimer();
+  }
+
+  void _initializeTimezone() {
+    tz.initializeTimeZones();
+    _manilaLocation = tz.getLocation('Asia/Manila');
+  }
+
+  // Get current Manila time regardless of device timezone
+  DateTime get _currentManilaTime {
+    return tz.TZDateTime.now(_manilaLocation);
+  }
 
   // Transform API data into the expected format
   List<Map<String, dynamic>> transformApiData(List<dynamic> apiData) {
     Map<String, List<Map<String, dynamic>>> groupedByTime = {};
 
     // Get current Manila time for filtering
-    DateTime utcNow = DateTime.now().toUtc();
-    DateTime manilaTime = utcNow.add(Duration(hours: 8));
+    DateTime manilaTime = _currentManilaTime;
 
     for (var item in apiData) {
       if (item is List && item.length >= 6) {
@@ -171,11 +191,8 @@ class _BusSchedulesState extends State<BusSchedules> {
       String timeStr = item[2]?.toString() ?? '';
       if (timeStr.isNotEmpty) {
         try {
-          // Parse the scheduled time - use Manila time (UTC+8)
-          DateTime utcNow = DateTime.now().toUtc();
-          DateTime manilaTime = utcNow.add(
-            Duration(hours: 8),
-          ); // UTC+8 for Manila
+          // Parse the scheduled time using Manila timezone
+          DateTime manilaTime = _currentManilaTime;
           DateTime scheduledTime = parseScheduledTime(timeStr);
 
           // Check if current time is within 30 minutes before scheduled time
@@ -195,9 +212,8 @@ class _BusSchedulesState extends State<BusSchedules> {
 
   // Helper function to parse scheduled time
   DateTime parseScheduledTime(String timeStr) {
-    // Get Manila time (UTC+8)
-    DateTime utcNow = DateTime.now().toUtc();
-    DateTime manilaTime = utcNow.add(Duration(hours: 8));
+    // Get current Manila time
+    DateTime manilaTime = _currentManilaTime;
 
     // Remove any extra spaces and convert to uppercase
     timeStr = timeStr.trim().toUpperCase();
@@ -222,8 +238,9 @@ class _BusSchedulesState extends State<BusSchedules> {
         hour = 0;
       }
 
-      // Create DateTime for today with the parsed time using Manila date
-      DateTime result = DateTime(
+      // Create DateTime for today with the parsed time in Manila timezone
+      DateTime result = tz.TZDateTime(
+        _manilaLocation,
         manilaTime.year,
         manilaTime.month,
         manilaTime.day,
@@ -234,13 +251,6 @@ class _BusSchedulesState extends State<BusSchedules> {
     }
 
     throw FormatException('Invalid time format: $timeStr');
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchSchedules();
-    _startRefreshTimer();
   }
 
   @override
@@ -269,7 +279,17 @@ class _BusSchedulesState extends State<BusSchedules> {
         final jsonData = jsonDecode(response.body);
         final rawSchedules = jsonData['result'];
 
+        print("Raw API data sample: ${rawSchedules.length} items");
+        if (rawSchedules.isNotEmpty) {
+          print("First item: ${rawSchedules[0]}");
+        }
+
         final transformedData = transformApiData(rawSchedules);
+
+        // Debug: Show timezone information
+        print("Current Manila time: ${_currentManilaTime}");
+        print("Device timezone: ${DateTime.now().timeZoneName}");
+        print("Transformed data: ${transformedData.length} time groups");
 
         setState(() {
           _schedules = transformedData;
