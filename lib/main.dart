@@ -12,9 +12,20 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 // Utility class to manage authentication state
 class AuthManager {
   static bool _isLoggedIn = false;
+  static DateTime? _appPausedTime;
   static final List<Function(bool)> _listeners = [];
 
   static bool get isLoggedIn => _isLoggedIn;
+
+  static bool get requiresReauth {
+    if (_appPausedTime == null) return false;
+
+    final now = DateTime.now();
+    final timeDifference = now.difference(_appPausedTime!);
+
+    // Require re-authentication if more than 1 minute has passed
+    return timeDifference.inMinutes >= 1;
+  }
 
   static void setLoggedIn(bool value) {
     if (_isLoggedIn != value) {
@@ -44,6 +55,24 @@ class AuthManager {
       // Even if there's an error, set logged out state
       setLoggedIn(false);
     }
+  }
+
+  // Method to handle app going to background
+  static void handleAppPaused() {
+    if (_isLoggedIn) {
+      _appPausedTime = DateTime.now();
+    }
+  }
+
+  // Method to handle app coming back from background
+  static bool handleAppResumed() {
+    // Return true if re-authentication is required
+    return requiresReauth;
+  }
+
+  // Method to reset re-authentication requirement
+  static void clearReauthRequirement() {
+    _appPausedTime = null;
   }
 }
 
@@ -118,7 +147,6 @@ class _InitializationState extends State<Initialization> {
     // Listen to auth state changes from Supabase
     supabase.auth.onAuthStateChange.listen((data) {
       final session = data.session;
-      final user = data.event;
 
       if (session != null) {
         // User is logged in

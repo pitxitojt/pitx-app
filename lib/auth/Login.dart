@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:pitx/main.dart';
 import 'dart:async';
 import 'package:bcrypt/bcrypt.dart';
+import 'package:pitx/services/BiometricService.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -22,6 +23,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Biometric authentication variables
+  bool _showBiometricOption = false;
+  String _biometricTypeName = "";
+  final BiometricService _biometricService = BiometricService();
 
   @override
   void dispose() {
@@ -62,7 +68,17 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     Future.delayed(const Duration(milliseconds: 300), () {
       _slideController.forward();
     });
+
+    // Check biometric availability
+    _checkBiometricAvailability();
     _focusNodes[0].requestFocus();
+
+    // If this is a re-authentication scenario, automatically try biometric
+    if (AuthManager.requiresReauth) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _attemptBiometricLogin();
+      });
+    }
   }
 
   bool get _isFormValid {
@@ -79,6 +95,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       final realPin = supabase.auth.currentUser?.userMetadata?['pin'] ?? "";
       final enteredPin = _pinControllers.map((c) => c.text).join();
       if (BCrypt.checkpw(enteredPin, realPin)) {
+        // Clear re-authentication requirement
+        AuthManager.clearReauthRequirement();
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         setState(() {
@@ -89,6 +107,37 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
       setState(
         () => _errorMessage = "An error occurred while checking the pin.",
       );
+    }
+  }
+
+  Future<void> _checkBiometricAvailability() async {
+    bool shouldUseBiometric = await _biometricService.shouldUseBiometric();
+    if (shouldUseBiometric) {
+      String typeName = await _biometricService.getBiometricTypeName();
+      setState(() {
+        _showBiometricOption = true;
+        _biometricTypeName = typeName;
+      });
+
+      // Automatically attempt biometric authentication on app start
+      _attemptBiometricLogin();
+    }
+  }
+
+  Future<void> _attemptBiometricLogin() async {
+    try {
+      bool authenticated = await _biometricService.authenticate(
+        reason: 'Please authenticate to access your PITX account',
+      );
+
+      if (authenticated) {
+        // Clear re-authentication requirement
+        AuthManager.clearReauthRequirement();
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      print('Biometric authentication failed: $e');
+      // Silently fail and let user use PIN
     }
   }
 
@@ -288,6 +337,49 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                               ],
                             ),
                           ),
+
+                          // Biometric authentication option
+                          if (_showBiometricOption) ...[
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: OutlinedButton(
+                                onPressed: _attemptBiometricLogin,
+                                style: OutlinedButton.styleFrom(
+                                  side: BorderSide(
+                                    color: Colors.white.withOpacity(0.7),
+                                    width: 2,
+                                  ),
+                                  backgroundColor: Colors.white.withOpacity(
+                                    0.1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.fingerprint,
+                                      color: Colors.white,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      "Use $_biometricTypeName",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
 
                           const SizedBox(height: 32),
                         ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
+import 'package:pitx/pages/Settings.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -242,6 +243,13 @@ class _ProfileState extends State<Profile> {
                                 if (item['label'] == 'Logout') {
                                   // Show confirmation dialog before logout
                                   await _showLogoutConfirmation();
+                                } else if (item['label'] == 'Settings') {
+                                  // Navigate to Settings page
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => const Settings(),
+                                    ),
+                                  );
                                 }
                               },
                               borderRadius: BorderRadius.circular(16),
