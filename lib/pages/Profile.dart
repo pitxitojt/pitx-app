@@ -89,10 +89,10 @@ class _ProfileState extends State<Profile> {
   }
 
   final List<Map<String, dynamic>> menuItems = [
-    {'label': 'About PITX', 'icon': Icons.info, 'page': null},
-    {'label': 'Contact Us', 'icon': Icons.phone, 'page': null},
-    {'label': 'Settings', 'icon': Icons.settings, 'page': null},
-    {'label': 'Logout', 'icon': Icons.logout, 'page': null},
+    {'label': 'About PITX', 'icon': Icons.info},
+    {'label': 'Contact Us', 'icon': Icons.phone},
+    {'label': 'Settings', 'icon': Icons.settings},
+    {'label': 'Logout', 'icon': Icons.logout},
   ];
 
   void initState() {

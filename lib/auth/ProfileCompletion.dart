@@ -62,8 +62,6 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
         throw Exception('Date of birth is required');
       }
 
-      print("======UPDATING USER PROFILE======");
-
       await supabase.auth.updateUser(
         UserAttributes(
           data: {
@@ -73,6 +71,14 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
           },
         ),
       );
+
+      await supabase.from('notifications').insert({
+        'user_id': supabase.auth.currentUser!.id,
+        'title': 'Welcome!',
+        'message':
+            'Congratulations! You have successfully registered with PITX.',
+        'is_read': false,
+      });
 
       setState(() {
         _isLoading = false;

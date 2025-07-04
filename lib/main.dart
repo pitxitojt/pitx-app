@@ -39,7 +39,6 @@ class AuthManager {
     try {
       await supabase.auth.signOut();
       setLoggedIn(false);
-      print("User logged out successfully");
     } catch (e) {
       print("Error during logout: $e");
       // Even if there's an error, set logged out state
@@ -121,9 +120,6 @@ class _InitializationState extends State<Initialization> {
       final session = data.session;
       final user = data.event;
 
-      print("Auth state changed: $user");
-      print("Session: $session");
-
       if (session != null) {
         // User is logged in
         AuthManager.setLoggedIn(true);
@@ -140,19 +136,13 @@ class _InitializationState extends State<Initialization> {
       final session = supabase.auth.currentSession;
       final user = supabase.auth.currentUser;
 
-      print("Checking existing session...");
-      print("Session: $session");
-      print("User: $user");
-
       if (session != null && user != null) {
         // User is already logged in
-        print("Existing session found, user is logged in");
         AuthManager.setLoggedIn(true);
         setState(() {
           _localIsLoggedIn = true;
         });
       } else {
-        print("No existing session found");
         AuthManager.setLoggedIn(false);
         setState(() {
           _localIsLoggedIn = false;

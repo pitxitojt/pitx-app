@@ -4,6 +4,8 @@ import 'package:pitx/pages/BusSchedules.dart';
 import 'package:pitx/pages/FAQ.dart';
 import 'package:pitx/pages/Food.dart';
 import 'package:pitx/screens/Notifications.dart';
+import 'package:pitx/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -140,6 +142,44 @@ Widget generateCarousel(
 }
 
 class _HomeState extends State<Home> {
+  int _unreadNotificationCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotificationCount();
+    supabase
+        .channel('public:notifications')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifications',
+          callback: (payload) async {
+            await _fetchNotificationCount();
+          },
+        )
+        .subscribe();
+  }
+
+  Future<void> _fetchNotificationCount() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        final response = await supabase
+            .from('notifications')
+            .select('is_read')
+            .eq('user_id', user.id)
+            .eq('is_read', false);
+
+        setState(() {
+          _unreadNotificationCount = response.length;
+        });
+      }
+    } catch (e) {
+      print('Error fetching notification count: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -154,38 +194,78 @@ class _HomeState extends State<Home> {
               color: Colors.white.withOpacity(0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: IconButton(
-              icon: Icon(Icons.notifications_outlined, color: Colors.white),
-              tooltip: 'Notifications',
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                foregroundColor: Colors.white,
-                overlayColor: Colors.white.withOpacity(0.1),
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation, secondaryAnimation) =>
-                        const Notifications(),
-                    transitionsBuilder:
-                        (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.easeInOut;
-
-                          final tween = Tween(
-                            begin: begin,
-                            end: end,
-                          ).chain(CurveTween(curve: curve));
-
-                          return SlideTransition(
-                            position: animation.drive(tween),
-                            child: child,
-                          );
-                        },
+            child: Stack(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.notifications_outlined, color: Colors.white),
+                  tooltip: 'Notifications',
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    overlayColor: Colors.white.withOpacity(0.1),
                   ),
-                );
-              },
+                  onPressed: () {
+                    Navigator.of(context)
+                        .push(
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const Notifications(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  const begin = Offset(1.0, 0.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+
+                                  final tween = Tween(
+                                    begin: begin,
+                                    end: end,
+                                  ).chain(CurveTween(curve: curve));
+
+                                  return SlideTransition(
+                                    position: animation.drive(tween),
+                                    child: child,
+                                  );
+                                },
+                          ),
+                        )
+                        .then((_) {
+                          // Refresh notification count when returning from notifications page
+                          _fetchNotificationCount();
+                        });
+                  },
+                ),
+                // Red notification indicator
+                if (_unreadNotificationCount > 0)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: BoxConstraints(minWidth: 12, minHeight: 12),
+                      child: Text(
+                        _unreadNotificationCount > 9
+                            ? '9+'
+                            : _unreadNotificationCount.toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

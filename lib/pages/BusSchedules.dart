@@ -292,14 +292,8 @@ class _BusSchedulesState extends State<BusSchedules>
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final rawSchedules = jsonData['result'];
-        print("Raw API data sample: ${rawSchedules.length} items");
 
         final transformedData = transformApiData(rawSchedules);
-
-        // Debug: Show timezone information (only occasionally)
-        if (rawSchedules.length > 0) {
-          print("Current Manila time: ${_currentManilaTime}");
-        }
 
         setState(() {
           _schedules = transformedData;

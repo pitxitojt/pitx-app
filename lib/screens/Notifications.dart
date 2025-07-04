@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Notifications extends StatefulWidget {
   const Notifications({super.key});
@@ -8,71 +10,86 @@ class Notifications extends StatefulWidget {
 }
 
 class _NotificationsState extends State<Notifications> {
-  final List<Map<String, dynamic>> notifications = [
-    {
-      'title': 'Bus Schedule Update',
-      'message':
-          'The bus schedule has been updated. Please check the app for details.',
-      'date': '2023-10-01',
-      'time': '09:30 AM',
-      'type': 'schedule',
-      'isRead': false,
-    },
-    {
-      'title': 'Maintenance Notice',
-      'message':
-          'Scheduled maintenance will occur on 2023-10-05. Expect delays.',
-      'date': '2023-09-30',
-      'time': '02:15 PM',
-      'type': 'maintenance',
-      'isRead': true,
-    },
-    {
-      'title': 'New Feature Alert',
-      'message': 'We have added a new feature to enhance your experience.',
-      'date': '2023-09-29',
-      'time': '11:45 AM',
-      'type': 'feature',
-      'isRead': false,
-    },
-    {
-      'title': 'Terminal Update',
-      'message':
-          'Gate 3 is now operational. All services are running normally.',
-      'date': '2023-09-28',
-      'time': '08:20 AM',
-      'type': 'terminal',
-      'isRead': true,
-    },
-  ];
+  List<Map<String, dynamic>> notifications = [];
+  bool _isLoading = true;
+  void initState() {
+    super.initState();
+    fetchNotifications();
+    supabase
+        .channel('public:notifications')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifications',
+          callback: (payload) async {
+            await fetchNotifications();
+          },
+        )
+        .subscribe();
+  }
 
-  IconData getNotificationIcon(String type) {
-    switch (type) {
-      case 'schedule':
-        return Icons.schedule;
-      case 'maintenance':
-        return Icons.build;
-      case 'feature':
-        return Icons.new_releases;
-      case 'terminal':
-        return Icons.location_on;
-      default:
-        return Icons.notifications;
+  Future<void> fetchNotifications() async {
+    try {
+      final user_id = supabase.auth.currentUser!.id;
+      final response = await supabase
+          .from('notifications')
+          .select('created_at, title, body, is_read')
+          .eq('user_id', user_id)
+          .order('created_at', ascending: false);
+      setState(() {
+        notifications = List<Map<String, dynamic>>.from(
+          response as List<dynamic>,
+        );
+      });
+
+      // update read status
+      await supabase
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('user_id', user_id)
+          .eq('is_read', false);
+    } catch (e) {
+      print("Error fetching notifications: $e");
+      // Handle error, maybe show a snackbar or dialog
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  Color getNotificationColor(String type) {
-    switch (type) {
-      case 'schedule':
-        return Colors.blue;
-      case 'maintenance':
-        return Colors.orange;
-      case 'feature':
-        return Colors.green;
-      case 'terminal':
-        return Colors.purple;
-      default:
-        return Colors.grey;
+  // Helper function to format elapsed time
+  String formatElapsedTime(String createdAt) {
+    try {
+      final DateTime created = DateTime.parse(createdAt);
+      final DateTime now = DateTime.now();
+      final Duration difference = now.difference(created);
+
+      final int minutes = difference.inMinutes;
+      final int hours = difference.inHours;
+      final int days = difference.inDays;
+      final int weeks = (days / 7).floor();
+      final int months = (days / 30).floor();
+      final int years = (days / 365).floor();
+
+      if (years >= 1) {
+        return years == 1 ? '1 year ago' : '$years years ago';
+      } else if (months >= 1) {
+        return months == 1 ? '1 month ago' : '$months months ago';
+      } else if (weeks >= 1) {
+        return weeks == 1 ? '1 week ago' : '$weeks weeks ago';
+      } else if (days >= 1) {
+        return days == 1 ? '1 day ago' : '$days days ago';
+      } else if (hours >= 1) {
+        return hours == 1 ? '1 hour ago' : '$hours hours ago';
+      } else if (minutes >= 1) {
+        return minutes == 1 ? '1 minute ago' : '$minutes minutes ago';
+      } else {
+        return 'Just now';
+      }
+    } catch (e) {
+      print('Error parsing date: $e');
+      return 'Unknown time';
     }
   }
 
@@ -115,7 +132,7 @@ class _NotificationsState extends State<Notifications> {
                         ),
                       ),
                     ),
-                    if (!notification['isRead'])
+                    if (!(notification['is_read'] ?? false))
                       Container(
                         width: 8,
                         height: 8,
@@ -128,7 +145,7 @@ class _NotificationsState extends State<Notifications> {
                 ),
                 SizedBox(height: 8),
                 Text(
-                  notification['message'],
+                  notification['body'],
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[700],
@@ -141,7 +158,7 @@ class _NotificationsState extends State<Notifications> {
                     Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
                     SizedBox(width: 4),
                     Text(
-                      '${notification['date']} • ${notification['time']}',
+                      formatElapsedTime(notification['created_at']),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[500],
@@ -290,7 +307,9 @@ class _NotificationsState extends State<Notifications> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              '${notifications.where((n) => !n['isRead']).length} new',
+                              _isLoading
+                                  ? 'Loading...'
+                                  : '${notifications.where((n) => !(n['is_read'] ?? false)).length} new',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -303,12 +322,20 @@ class _NotificationsState extends State<Notifications> {
                       SizedBox(height: 16),
 
                       // Notification cards
-                      ...notifications.map((notification) {
-                        return generateNotificationCard(notification);
-                      }).toList(),
+                      if (_isLoading)
+                        Center(
+                          heightFactor: 12,
+                          child: CircularProgressIndicator(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        )
+                      else
+                        ...notifications.map((notification) {
+                          return generateNotificationCard(notification);
+                        }).toList(),
 
                       // Empty state or additional content
-                      if (notifications.isEmpty)
+                      if (!_isLoading && notifications.isEmpty)
                         Container(
                           width: double.infinity,
                           padding: EdgeInsets.all(32),

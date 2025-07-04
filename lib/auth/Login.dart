@@ -78,8 +78,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
     try {
       final realPin = supabase.auth.currentUser?.userMetadata?['pin'] ?? "";
       final enteredPin = _pinControllers.map((c) => c.text).join();
-      print(realPin);
-      print(enteredPin);
       if (BCrypt.checkpw(enteredPin, realPin)) {
         Navigator.pushReplacementNamed(context, '/home');
       } else {

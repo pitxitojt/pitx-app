@@ -31,7 +31,6 @@ class _PhoneVerificationState extends State<PhoneVerification> {
   @override
   void initState() {
     super.initState();
-    print("===========SEND OTP===========");
     _sendOtp();
     _startResendTimer(); // Always start timer regardless of OTP success/failure
     _focusNodes[0].requestFocus();
@@ -62,7 +61,6 @@ class _PhoneVerificationState extends State<PhoneVerification> {
     try {
       // Send OTP
       await supabase.auth.signInWithOtp(phone: number);
-      print("OTP sent successfully to $number");
     } catch (e) {
       print("OTP sending failed: $e");
       // Show demo message when OTP is disabled
@@ -100,13 +98,11 @@ class _PhoneVerificationState extends State<PhoneVerification> {
     final enteredOtp = _otpControllers.map((c) => c.text).join();
 
     try {
-      print("======VERIFY OTP======");
       final AuthResponse res = await supabase.auth.verifyOTP(
         type: OtpType.sms,
         token: enteredOtp,
         phone: number,
       );
-      print("OTP verification response: $res");
 
       if (res.user != null) {
         setState(() {
@@ -153,11 +149,6 @@ class _PhoneVerificationState extends State<PhoneVerification> {
             dateOfBirth.toString().isNotEmpty &&
             pin != null &&
             pin.toString().isNotEmpty;
-
-        print("Profile complete: $hasCompleteProfile");
-        print(
-          "First name: $firstName, Last name: $lastName, DOB: $dateOfBirth",
-        );
 
         if (hasCompleteProfile) {
           // User has complete profile, go to home page
