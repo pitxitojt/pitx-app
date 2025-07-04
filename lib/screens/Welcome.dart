@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pitx/pages/Signup.dart';
+import 'package:pitx/auth/Signup.dart';
 
 class Welcome extends StatefulWidget {
   const Welcome({super.key});

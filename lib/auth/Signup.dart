@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pitx/pages/PhoneVerification.dart';
+import 'package:pitx/auth/PhoneVerification.dart';
 import 'package:country_flags/country_flags.dart';
 
 class Signup extends StatefulWidget {

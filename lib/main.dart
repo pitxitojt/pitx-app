@@ -51,7 +51,7 @@ class AuthManager {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
-
+  // hide anonKey in public repo
   await Supabase.initialize(
     url: 'SUPABASE_URL',
     anonKey:
