@@ -142,6 +142,7 @@ class _PhoneVerificationState extends State<PhoneVerification> {
         final firstName = userData?['first_name'];
         final lastName = userData?['last_name'];
         final dateOfBirth = userData?['date_of_birth'];
+        final pin = userData?['pin'];
 
         bool hasCompleteProfile =
             firstName != null &&
@@ -149,7 +150,9 @@ class _PhoneVerificationState extends State<PhoneVerification> {
             lastName != null &&
             lastName.toString().isNotEmpty &&
             dateOfBirth != null &&
-            dateOfBirth.toString().isNotEmpty;
+            dateOfBirth.toString().isNotEmpty &&
+            pin != null &&
+            pin.toString().isNotEmpty;
 
         print("Profile complete: $hasCompleteProfile");
         print(

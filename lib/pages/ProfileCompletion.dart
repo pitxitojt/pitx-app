@@ -79,7 +79,7 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
       });
 
       // Navigate to home after successful profile completion
-      Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      Navigator.pushNamedAndRemoveUntil(context, '/set-pin', (route) => false);
     } catch (e) {
       setState(() {
         _isLoading = false;
