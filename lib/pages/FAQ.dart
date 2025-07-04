@@ -161,6 +161,7 @@ class _FAQState extends State<FAQ> with TickerProviderStateMixin {
                     SizedBox(height: 12),
                     Text(
                       'Frequently Asked Questions',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,

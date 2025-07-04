@@ -12,7 +12,8 @@ class BusSchedules extends StatefulWidget {
   State<BusSchedules> createState() => _BusSchedulesState();
 }
 
-class _BusSchedulesState extends State<BusSchedules> {
+class _BusSchedulesState extends State<BusSchedules>
+    with WidgetsBindingObserver {
   // Dummy data for bus schedules
   List<Map<String, dynamic>>? _schedules;
   String? _errorMessage = null;
@@ -23,6 +24,7 @@ class _BusSchedulesState extends State<BusSchedules> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeTimezone();
     fetchSchedules();
     _startRefreshTimer();
@@ -255,8 +257,20 @@ class _BusSchedulesState extends State<BusSchedules> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _startRefreshTimer();
+      fetchSchedules(showLoading: false);
+    } else if (state == AppLifecycleState.paused) {
+      _refreshTimer?.cancel();
+    }
   }
 
   void _startRefreshTimer() {
@@ -278,18 +292,14 @@ class _BusSchedulesState extends State<BusSchedules> {
       if (response.statusCode == 200) {
         final jsonData = jsonDecode(response.body);
         final rawSchedules = jsonData['result'];
-
         print("Raw API data sample: ${rawSchedules.length} items");
-        if (rawSchedules.isNotEmpty) {
-          print("First item: ${rawSchedules[0]}");
-        }
 
         final transformedData = transformApiData(rawSchedules);
 
-        // Debug: Show timezone information
-        print("Current Manila time: ${_currentManilaTime}");
-        print("Device timezone: ${DateTime.now().timeZoneName}");
-        print("Transformed data: ${transformedData.length} time groups");
+        // Debug: Show timezone information (only occasionally)
+        if (rawSchedules.length > 0) {
+          print("Current Manila time: ${_currentManilaTime}");
+        }
 
         setState(() {
           _schedules = transformedData;
@@ -358,46 +368,46 @@ class _BusSchedulesState extends State<BusSchedules> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.1)),
       ),
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Operator
             Expanded(
               flex: 3,
-              child: Text(
-                schedule['operator'],
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+              child: Center(
+                child: Text(
+                  schedule['operator'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             SizedBox(width: 8),
             // Route with text wrapping for long destination names
             Expanded(
               flex: 3,
-              child: Text(
-                schedule['route'],
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500,
+              child: Center(
+                child: Text(
+                  schedule['route'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
                 ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
             // Gate
@@ -458,15 +468,6 @@ class _BusSchedulesState extends State<BusSchedules> {
                 decoration: BoxDecoration(
                   color: getStatusColor(schedule['status']),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: getStatusColor(
-                        schedule['status'],
-                      ).withOpacity(0.3),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
                 ),
                 child: Center(
                   child: FittedBox(
@@ -494,13 +495,7 @@ class _BusSchedulesState extends State<BusSchedules> {
       margin: EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -509,22 +504,8 @@ class _BusSchedulesState extends State<BusSchedules> {
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.primary.withOpacity(0.9),
-                ],
-                begin: Alignment.centerLeft,
-                end: Alignment.centerRight,
-              ),
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              boxShadow: [
-                BoxShadow(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -551,9 +532,15 @@ class _BusSchedulesState extends State<BusSchedules> {
             child: Column(
               children: [
                 SizedBox(height: 8),
-                ...timeData['schedules']
-                    .map<Widget>((schedule) => buildScheduleCard(schedule))
-                    .toList(),
+                // Use ListView.builder for better performance
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: timeData['schedules'].length,
+                  itemBuilder: (context, index) {
+                    return buildScheduleCard(timeData['schedules'][index]);
+                  },
+                ),
                 SizedBox(height: 8),
               ],
             ),
@@ -686,27 +673,16 @@ class _BusSchedulesState extends State<BusSchedules> {
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.primary.withOpacity(0.8),
-                    Colors.white,
-                  ],
-                  stops: [0.0, 0.5, 0.7],
-                ),
-              ),
+              color: Theme.of(context).colorScheme.primary,
               child: SingleChildScrollView(
                 physics: AlwaysScrollableScrollPhysics(),
                 child: Column(
                   children: [
-                    // Modern date header with gradient (now in scrollable content)
+                    // Modern date header (now in scrollable content)
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: Colors.transparent),
+                      color: Theme.of(context).colorScheme.primary,
                       child: Column(
                         children: [
                           Container(
@@ -782,12 +758,17 @@ class _BusSchedulesState extends State<BusSchedules> {
                               : [
                                   buildTableHeader(),
                                   SizedBox(height: 8),
-                                  ...(_schedules ?? [])
-                                      .map(
-                                        (timeData) =>
-                                            buildTimeSection(timeData),
-                                      )
-                                      .toList(),
+                                  // Use ListView.builder for better performance
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    physics: NeverScrollableScrollPhysics(),
+                                    itemCount: (_schedules ?? []).length,
+                                    itemBuilder: (context, index) {
+                                      return buildTimeSection(
+                                        _schedules![index],
+                                      );
+                                    },
+                                  ),
                                   // Add extra bottom padding for better scrolling experience
                                   SizedBox(height: 32),
                                 ],
