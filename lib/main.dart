@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pitx/screens/Base.dart';
 import 'package:pitx/screens/Welcome.dart';
-import 'package:pitx/pages/Login.dart';
-import 'package:pitx/pages/SetPin.dart';
-import 'package:pitx/pages/Signup.dart';
-import 'package:pitx/pages/ProfileCompletion.dart';
+import 'package:pitx/auth/Login.dart';
+import 'package:pitx/auth/SetPin.dart';
+import 'package:pitx/auth/Signup.dart';
+import 'package:pitx/auth/ProfileCompletion.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
