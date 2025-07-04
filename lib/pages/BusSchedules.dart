@@ -141,7 +141,7 @@ class _BusSchedulesState extends State<BusSchedules>
       DateTime scheduledTime = parseScheduledTime(timeStr);
 
       // Always include cancelled schedules regardless of time
-      if (status.toUpperCase() == 'CANCELLED') {
+      if (['CANCELLED', 'DELAYED', 'DEPARTED'].contains(status.toUpperCase())) {
         return true;
       }
 
@@ -187,6 +187,11 @@ class _BusSchedulesState extends State<BusSchedules>
       } else if (item[6] == "0") {
         status = "TBD";
       } else if (item[6] == "7") {
+        if (item[13] == "1")
+          status = "DEPARTED";
+        else if (item[13] == "0")
+          status = "DELAYED";
+      } else if (item[6] == "2") {
         status = "DELAYED";
       }
     }
@@ -325,9 +330,11 @@ class _BusSchedulesState extends State<BusSchedules>
       case 'CANCELLED':
         return Color(0xFFEF4444); // Modern red
       case 'TBD':
-        return Color(0xFF3B82F6); // Modern blue
+        return Color(0xFFFFFFFF); // Modern blue
       case 'DELAYED':
         return Color(0xFFF59E0B); // Modern amber
+      case 'DEPARTED':
+        return Color(0xFF3B82F6); // Modern blue
       default:
         return Color(0xFFEF4444); // Default modern blue
     }
