@@ -761,7 +761,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
       onRefresh: _refreshData,
       child: ListView.builder(
         padding: EdgeInsets.all(20),
-        physics: BouncingScrollPhysics(),
+        physics: AlwaysScrollableScrollPhysics(),
         itemCount: _filteredOperators.length,
         itemBuilder: (context, index) {
           final operator = _filteredOperators[index];
@@ -827,7 +827,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
       onRefresh: _refreshData,
       child: ListView.builder(
         padding: EdgeInsets.all(20),
-        physics: BouncingScrollPhysics(),
+        physics: AlwaysScrollableScrollPhysics(),
         itemCount: _filteredSchedules.length,
         itemBuilder: (context, index) {
           final schedule = _filteredSchedules[index];
