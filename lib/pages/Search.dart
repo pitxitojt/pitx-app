@@ -29,6 +29,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
   List<Map<String, dynamic>> _busSchedules = [];
 
   late tz.Location _manilaLocation;
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -36,8 +37,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     _tabController = TabController(length: 2, vsync: this);
     _searchController.addListener(_onSearchChanged);
     _initializeTimezone();
-    _fetchSchedules();
-    _fetchBusOperators();
+    // Remove initial data fetching - only fetch when user searches
   }
 
   void launchInBrowser(String url) async {
@@ -96,11 +96,6 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
   }
 
   Future<void> _fetchSchedules() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
     try {
       final url =
           "https://www.pitx.ph/wp-content/themes/sunday-elephant-child-theme/includes/php/departures.php";
@@ -112,107 +107,94 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
 
         _processScheduleData(rawSchedules);
       } else {
-        setState(() {
-          _errorMessage = 'Failed to fetch data: ${response.statusCode}';
-        });
+        throw Exception('Failed to fetch schedules: ${response.statusCode}');
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Failed to fetch data: $e';
-      });
+      throw Exception('Failed to fetch schedules: $e');
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   Future<void> _refreshData() async {
-    // Refresh both schedules and operators
-    await Future.wait([_fetchSchedules(), _fetchBusOperators()]);
+    // Only refresh if there's an active search
+    if (_searchQuery.isNotEmpty) {
+      await _fetchDataWithSearch();
+    }
   }
 
   Future<void> _fetchBusOperators() async {
-    try {
-      // Get all destinations first (same as BusOperators.dart)
-      final List destinations = await supabase
-          .from('destination')
-          .select()
-          .order('name', ascending: true);
+    // Get all destinations first (same as BusOperators.dart)
+    final List destinations = await supabase
+        .from('destination')
+        .select()
+        .order('name', ascending: true);
 
-      // For each destination, get the operators that serve it
-      Map<String, Map<String, dynamic>> operatorMap = {};
+    // For each destination, get the operators that serve it
+    Map<String, Map<String, dynamic>> operatorMap = {};
 
-      for (var destination in destinations) {
-        String destinationName = destination['name'] ?? '';
+    for (var destination in destinations) {
+      String destinationName = destination['name'] ?? '';
 
-        if (destinationName.isNotEmpty) {
-          // Get all route IDs for this destination (same logic as BusOperators.dart)
-          final List routeRows = await supabase
-              .from('routes')
-              .select('id, name, destination')
-              .eq('destination', destinationName)
-              .order('name', ascending: true);
+      if (destinationName.isNotEmpty) {
+        // Get all route IDs for this destination (same logic as BusOperators.dart)
+        final List routeRows = await supabase
+            .from('routes')
+            .select('id, name, destination')
+            .eq('destination', destinationName)
+            .order('name', ascending: true);
 
-          final List<int> routeIds = routeRows
-              .map((r) => r['id'] as int)
-              .toList();
+        final List<int> routeIds = routeRows
+            .map((r) => r['id'] as int)
+            .toList();
 
-          if (routeIds.isNotEmpty) {
-            // Get operator routes that match those route IDs (same logic as BusOperators.dart)
-            final List operatorRoutes = await supabase
-                .from('bus_operator_routes')
-                .select('routes(id, name), bus_operators(name, website_url)')
-                .inFilter('route_id', routeIds);
+        if (routeIds.isNotEmpty) {
+          // Get operator routes that match those route IDs (same logic as BusOperators.dart)
+          final List operatorRoutes = await supabase
+              .from('bus_operator_routes')
+              .select('routes(id, name), bus_operators(name, website_url)')
+              .inFilter('route_id', routeIds);
 
-            // Process the results
-            for (var item in operatorRoutes) {
-              String operatorName = item['bus_operators']['name'] ?? '';
-              String routeName = item['routes']['name'] ?? '';
-              String websiteUrl = item['bus_operators']['website_url'] ?? '';
+          // Process the results
+          for (var item in operatorRoutes) {
+            String operatorName = item['bus_operators']['name'] ?? '';
+            String routeName = item['routes']['name'] ?? '';
+            String websiteUrl = item['bus_operators']['website_url'] ?? '';
 
-              if (operatorName.isNotEmpty) {
-                if (!operatorMap.containsKey(operatorName)) {
-                  operatorMap[operatorName] = {
-                    'name': operatorName,
-                    'routes': <String>[],
-                    'destinations': <String>[],
-                    'website_url': websiteUrl,
-                  };
-                }
+            if (operatorName.isNotEmpty) {
+              if (!operatorMap.containsKey(operatorName)) {
+                operatorMap[operatorName] = {
+                  'name': operatorName,
+                  'routes': <String>[],
+                  'destinations': <String>[],
+                  'website_url': websiteUrl,
+                };
+              }
 
-                // Add route if not already present
-                if (routeName.isNotEmpty &&
-                    !operatorMap[operatorName]!['routes'].contains(routeName)) {
-                  operatorMap[operatorName]!['routes'].add(routeName);
-                }
+              // Add route if not already present
+              if (routeName.isNotEmpty &&
+                  !operatorMap[operatorName]!['routes'].contains(routeName)) {
+                operatorMap[operatorName]!['routes'].add(routeName);
+              }
 
-                // Add destination if not already present
-                if (destinationName.isNotEmpty &&
-                    !operatorMap[operatorName]!['destinations'].contains(
-                      destinationName,
-                    )) {
-                  operatorMap[operatorName]!['destinations'].add(
+              // Add destination if not already present
+              if (destinationName.isNotEmpty &&
+                  !operatorMap[operatorName]!['destinations'].contains(
                     destinationName,
-                  );
-                }
+                  )) {
+                operatorMap[operatorName]!['destinations'].add(destinationName);
               }
             }
           }
         }
       }
-
-      // Convert to list and sort
-      List<Map<String, dynamic>> operators = operatorMap.values.toList();
-      operators.sort((a, b) => a['name'].compareTo(b['name']));
-
-      setState(() {
-        _busOperators = operators;
-      });
-    } catch (e) {
-      print('Error fetching bus operators: $e');
-      // Don't show error for operators, just leave the list empty
     }
+
+    // Convert to list and sort
+    List<Map<String, dynamic>> operators = operatorMap.values.toList();
+    operators.sort((a, b) => a['name'].compareTo(b['name']));
+
+    setState(() {
+      _busOperators = operators;
+    });
   }
 
   void _processScheduleData(List<dynamic> apiData) {
@@ -352,8 +334,8 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
   }
 
   @override
-  @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     _tabController.dispose();
@@ -361,9 +343,48 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
   }
 
   void _onSearchChanged() {
+    // Cancel the previous timer if it exists
+    _debounceTimer?.cancel();
+
     setState(() {
       _searchQuery = _searchController.text.toLowerCase();
       _isSearching = _searchQuery.isNotEmpty;
+    });
+
+    // Only fetch data if there's a search query
+    if (_searchQuery.isNotEmpty) {
+      // Set up debounce timer
+      _debounceTimer = Timer(Duration(milliseconds: 500), () {
+        _fetchDataWithSearch();
+      });
+    } else {
+      // Clear data when search is empty
+      setState(() {
+        _busOperators = [];
+        _busSchedules = [];
+        _errorMessage = null;
+      });
+    }
+  }
+
+  Future<void> _fetchDataWithSearch() async {
+    if (_searchQuery.isEmpty) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await Future.wait([_fetchSchedules(), _fetchBusOperators()]);
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to fetch data: $e';
+      });
+    }
+
+    setState(() {
+      _isLoading = false;
     });
   }
 
@@ -611,7 +632,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
           ),
           SizedBox(height: 12),
           Text(
-            'Find bus operators, routes, schedules, and more.\nStart typing above to search.',
+            'Start typing above to search for bus operators, routes, schedules, and more.\nResults will appear automatically as you type.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
