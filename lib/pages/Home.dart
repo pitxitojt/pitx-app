@@ -679,12 +679,22 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                               ).primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            child: Text(
-                              "See all",
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 12,
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => BusOperators(),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                "See all",
+                                style: TextStyle(
+                                  color: Theme.of(context).primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
                               ),
                             ),
                           ),

@@ -16,18 +16,130 @@ class _BusSchedulesState extends State<BusSchedules>
     with WidgetsBindingObserver {
   // Dummy data for bus schedules
   List<Map<String, dynamic>>? _schedules;
+  List<Map<String, dynamic>>? _filteredSchedules;
   String? _errorMessage = null;
   bool _isLoading = true;
   Timer? _refreshTimer;
   late tz.Location _manilaLocation;
+
+  // Search and filter variables
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+  String selectedStatusFilter = 'All Statuses';
+  String selectedTimeFilter = 'All Times';
+  List<String> availableStatuses = ['All Statuses'];
+  List<String> availableTimeRanges = ['All Times', 'Morning (5AM-12PM)', 'Afternoon (12PM-6PM)', 'Evening (6PM-12AM)'];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeTimezone();
+    searchController.addListener(_onSearchChanged);
     fetchSchedules();
     _startRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    WidgetsBinding.instance.removeObserver(this);
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      searchQuery = searchController.text.toLowerCase();
+    });
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    if (_schedules == null) return;
+
+    setState(() {
+      _filteredSchedules = _schedules!.map((timeGroup) {
+        List<Map<String, dynamic>> filteredSchedules = timeGroup['schedules']
+            .where((schedule) {
+              bool matchesSearch = true;
+              bool matchesStatus = true;
+              bool matchesTime = true;
+
+              // Search filter (destination/route and operator)
+              if (searchQuery.isNotEmpty) {
+                String route = schedule['route']?.toLowerCase() ?? '';
+                String operator = schedule['operator']?.toLowerCase() ?? '';
+                matchesSearch = route.contains(searchQuery) || operator.contains(searchQuery);
+              }
+
+              // Status filter
+              if (selectedStatusFilter != 'All Statuses') {
+                matchesStatus = schedule['status'] == selectedStatusFilter;
+              }
+
+              // Time filter
+              if (selectedTimeFilter != 'All Times') {
+                matchesTime = _matchesTimeRange(timeGroup['time'], selectedTimeFilter);
+              }
+
+              return matchesSearch && matchesStatus && matchesTime;
+            })
+            .toList()
+            .cast<Map<String, dynamic>>();
+
+        return {
+          'time': timeGroup['time'],
+          'schedules': filteredSchedules,
+        };
+      }).where((timeGroup) => timeGroup['schedules'].isNotEmpty).toList();
+    });
+  }
+
+  bool _matchesTimeRange(String timeStr, String timeRange) {
+    try {
+      DateTime scheduledTime = parseScheduledTime(timeStr);
+      int hour = scheduledTime.hour;
+
+      switch (timeRange) {
+        case 'Morning (5AM-12PM)':
+          return hour >= 5 && hour < 12;
+        case 'Afternoon (12PM-6PM)':
+          return hour >= 12 && hour < 18;
+        case 'Evening (6PM-12AM)':
+          return hour >= 18 && hour < 24;
+        default:
+          return true;
+      }
+    } catch (e) {
+      return true;
+    }
+  }
+
+  void _updateAvailableFilters() {
+    if (_schedules == null) return;
+
+    Set<String> statuses = {'All Statuses'};
+
+    for (var timeGroup in _schedules!) {
+      for (var schedule in timeGroup['schedules']) {
+        statuses.add(schedule['status'] ?? '');
+      }
+    }
+
+    setState(() {
+      availableStatuses = statuses.toList()..sort();
+    });
+  }
+
+  void _resetFilters() {
+    setState(() {
+      searchController.clear();
+      searchQuery = '';
+      selectedStatusFilter = 'All Statuses';
+      selectedTimeFilter = 'All Times';
+    });
+    _applyFilters();
   }
 
   void _initializeTimezone() {
@@ -269,13 +381,6 @@ class _BusSchedulesState extends State<BusSchedules>
   }
 
   @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _refreshTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
@@ -312,6 +417,8 @@ class _BusSchedulesState extends State<BusSchedules>
           _schedules = transformedData;
           _errorMessage = null;
         });
+        _updateAvailableFilters();
+        _applyFilters();
       } else {
         setState(
           () => _errorMessage = 'Failed to fetch data: ${response.statusCode}',
@@ -733,6 +840,144 @@ class _BusSchedulesState extends State<BusSchedules>
                       ),
                     ),
 
+                    // Search and Filter Section
+                    Container(
+                      color: Theme.of(context).colorScheme.primary,
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      child: Column(
+                        children: [
+                          // Search Bar
+                          Container(
+                            child: TextField(
+                              controller: searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Search destination or operator...',
+                                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                suffixIcon: searchQuery.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(Icons.clear, color: Colors.grey),
+                                        onPressed: () {
+                                          searchController.clear();
+                                        },
+                                      )
+                                    : null,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: 12),
+
+                          // Filter Row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: selectedStatusFilter,
+                                      hint: Text('Filter by Status'),
+                                      isExpanded: true,
+                                      items: availableStatuses.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(
+                                            value,
+                                            style: TextStyle(fontSize: 12),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          selectedStatusFilter = newValue!;
+                                        });
+                                        _applyFilters();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: DropdownButtonHideUnderline(
+                                    child: DropdownButton<String>(
+                                      value: selectedTimeFilter,
+                                      hint: Text('Filter by Time'),
+                                      isExpanded: true,
+                                      items: availableTimeRanges.map((String value) {
+                                        return DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(
+                                            value,
+                                            style: TextStyle(fontSize: 12),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        );
+                                      }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          selectedTimeFilter = newValue!;
+                                        });
+                                        _applyFilters();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          SizedBox(height: 8),
+
+                          // Filter Results Count and Reset Button
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Showing ${(_filteredSchedules ?? []).length} time slots',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 12,
+                                ),
+                              ),
+                              if (searchQuery.isNotEmpty || 
+                                  selectedStatusFilter != 'All Statuses' || 
+                                  selectedTimeFilter != 'All Times')
+                                TextButton(
+                                  onPressed: _resetFilters,
+                                  child: Text(
+                                    'Clear Filters',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+
                     // Schedule content
                     Container(
                       decoration: BoxDecoration(
@@ -771,10 +1016,10 @@ class _BusSchedulesState extends State<BusSchedules>
                                   ListView.builder(
                                     shrinkWrap: true,
                                     physics: NeverScrollableScrollPhysics(),
-                                    itemCount: (_schedules ?? []).length,
+                                    itemCount: (_filteredSchedules ?? _schedules ?? []).length,
                                     itemBuilder: (context, index) {
                                       return buildTimeSection(
-                                        _schedules![index],
+                                        (_filteredSchedules ?? _schedules)![index],
                                       );
                                     },
                                   ),
