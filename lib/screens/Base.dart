@@ -5,6 +5,7 @@ import 'package:pitx/pages/Profile.dart';
 import 'package:pitx/pages/Search.dart';
 import 'package:collection/collection.dart';
 import 'package:pitx/main.dart' show AuthManager;
+import 'dart:async';
 
 class Base extends StatefulWidget {
   const Base({super.key});
@@ -15,6 +16,7 @@ class Base extends StatefulWidget {
 
 class _BaseState extends State<Base> with WidgetsBindingObserver {
   int _currentPage = 0;
+  Timer? _inactivityTimer;
 
   final List<Map<String, dynamic>> _bottomNavIcons = [
     {'label': "Home", 'icon': Icons.home, 'page': Home()},
@@ -27,12 +29,34 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _startInactivityTimer();
+    // Register initial activity
+    AuthManager.updateActivity();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _inactivityTimer?.cancel();
     super.dispose();
+  }
+
+  void _startInactivityTimer() {
+    _inactivityTimer?.cancel();
+    _inactivityTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      if (AuthManager.requiresReauth) {
+        // Navigate to login screen if re-authentication is required
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/login', (route) => false);
+        timer.cancel();
+      }
+    });
+  }
+
+  void _onUserInteraction() {
+    // Update activity time when user interacts
+    AuthManager.updateActivity();
   }
 
   @override
@@ -64,6 +88,7 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
   }
 
   void setCurrentPage(int index) {
+    _onUserInteraction(); // Track user interaction
     setState(() {
       _currentPage = index;
     });
@@ -78,25 +103,36 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentPage,
-        children: _bottomNavIcons.map((data) {
-          return data['page'] as Widget;
-        }).toList(),
-      ),
-      bottomNavigationBar: NavigationBar(
-        destinations: _bottomNavIcons.mapIndexed((index, data) {
-          return NavigationDestination(
-            icon: generateIcon(data['icon'], index),
-            label: data['label'],
-          );
-        }).toList(),
-        indicatorColor: Theme.of(context).colorScheme.primary,
-        indicatorShape: CircleBorder(),
-        selectedIndex: _currentPage,
-        backgroundColor: Theme.of(context).colorScheme.onPrimary,
-        onDestinationSelected: setCurrentPage,
+    return Listener(
+      onPointerDown: (_) => _onUserInteraction(),
+      onPointerMove: (_) => _onUserInteraction(),
+      onPointerUp: (_) => _onUserInteraction(),
+      child: GestureDetector(
+        onTap: _onUserInteraction,
+        onPanDown: (_) => _onUserInteraction(),
+        onScaleStart: (_) => _onUserInteraction(),
+        behavior: HitTestBehavior.translucent,
+        child: Scaffold(
+          body: IndexedStack(
+            index: _currentPage,
+            children: _bottomNavIcons.map((data) {
+              return data['page'] as Widget;
+            }).toList(),
+          ),
+          bottomNavigationBar: NavigationBar(
+            destinations: _bottomNavIcons.mapIndexed((index, data) {
+              return NavigationDestination(
+                icon: generateIcon(data['icon'], index),
+                label: data['label'],
+              );
+            }).toList(),
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            indicatorShape: CircleBorder(),
+            selectedIndex: _currentPage,
+            backgroundColor: Theme.of(context).colorScheme.onPrimary,
+            onDestinationSelected: setCurrentPage,
+          ),
+        ),
       ),
     );
   }

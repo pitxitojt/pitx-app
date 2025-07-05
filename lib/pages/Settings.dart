@@ -116,19 +116,52 @@ class _SettingsState extends State<Settings> {
         }
       }
     } else {
-      // Disable biometric
-      setState(() {
-        _biometricEnabled = false;
-      });
-      await _saveBiometricSetting(false);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric authentication disabled'),
-            backgroundColor: Colors.orange,
+      // Require biometric authentication before disabling
+      try {
+        bool authenticated = await _localAuth.authenticate(
+          localizedReason: 'Please authenticate to disable biometric login',
+          options: const AuthenticationOptions(
+            biometricOnly: true,
+            stickyAuth: true,
           ),
         );
+
+        if (authenticated) {
+          setState(() {
+            _biometricEnabled = false;
+          });
+          await _saveBiometricSetting(false);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Biometric authentication disabled'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Authentication failed. Biometric setting unchanged.',
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        print('Biometric authentication error: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     }
   }
