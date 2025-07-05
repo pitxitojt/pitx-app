@@ -25,9 +25,24 @@ class _NotificationsState extends State<Notifications>
 
   @override
   void dispose() {
+    markAsRead();
     WidgetsBinding.instance.removeObserver(this);
     _channel?.unsubscribe();
     super.dispose();
+  }
+
+  Future<void> markAsRead() async {
+    try {
+      final user_id = supabase.auth.currentUser!.id;
+      await supabase
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('user_id', user_id)
+          .eq('is_read', false);
+    } catch (e) {
+      print("Error marking notifications as read: $e");
+      // Handle error, maybe show a snackbar or dialog
+    }
   }
 
   @override
@@ -43,7 +58,8 @@ class _NotificationsState extends State<Notifications>
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
-        // App is going to background - no action needed
+        // App is going to background - mark notifications as read
+        markAsRead();
         break;
     }
   }
@@ -100,13 +116,6 @@ class _NotificationsState extends State<Notifications>
           );
         });
       }
-
-      // update read status
-      await supabase
-          .from('notifications')
-          .update({'is_read': true})
-          .eq('user_id', user_id)
-          .eq('is_read', false);
     } catch (e) {
       print("Error fetching notifications: $e");
       // Handle error, maybe show a snackbar or dialog
