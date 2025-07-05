@@ -127,6 +127,11 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     });
   }
 
+  Future<void> _refreshData() async {
+    // Refresh both schedules and operators
+    await Future.wait([_fetchSchedules(), _fetchBusOperators()]);
+  }
+
   Future<void> _fetchBusOperators() async {
     try {
       // Get all destinations first (same as BusOperators.dart)
@@ -706,26 +711,47 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     }
 
     if (_errorMessage != null) {
-      return _buildErrorMessage();
+      return RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: _buildErrorMessage(),
+          ),
+        ),
+      );
     }
 
     if (_filteredOperators.isEmpty) {
-      return _buildNoResults('No operators found');
+      return RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: _buildNoResults('No operators found'),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.all(20),
-      physics: BouncingScrollPhysics(),
-      itemCount: _filteredOperators.length,
-      itemBuilder: (context, index) {
-        final operator = _filteredOperators[index];
-        return AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          margin: EdgeInsets.only(bottom: 16),
-          child: _buildOperatorCard(operator),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: ListView.builder(
+        padding: EdgeInsets.all(20),
+        physics: BouncingScrollPhysics(),
+        itemCount: _filteredOperators.length,
+        itemBuilder: (context, index) {
+          final operator = _filteredOperators[index];
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            margin: EdgeInsets.only(bottom: 16),
+            child: _buildOperatorCard(operator),
+          );
+        },
+      ),
     );
   }
 
@@ -751,26 +777,47 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     }
 
     if (_errorMessage != null) {
-      return _buildErrorMessage();
+      return RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: _buildErrorMessage(),
+          ),
+        ),
+      );
     }
 
     if (_filteredSchedules.isEmpty) {
-      return _buildNoResults('No schedules found');
+      return RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: _buildNoResults('No schedules found'),
+          ),
+        ),
+      );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.all(20),
-      physics: BouncingScrollPhysics(),
-      itemCount: _filteredSchedules.length,
-      itemBuilder: (context, index) {
-        final schedule = _filteredSchedules[index];
-        return AnimatedContainer(
-          duration: Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          margin: EdgeInsets.only(bottom: 16),
-          child: _buildScheduleCard(schedule),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: _refreshData,
+      child: ListView.builder(
+        padding: EdgeInsets.all(20),
+        physics: BouncingScrollPhysics(),
+        itemCount: _filteredSchedules.length,
+        itemBuilder: (context, index) {
+          final schedule = _filteredSchedules[index];
+          return AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            margin: EdgeInsets.only(bottom: 16),
+            child: _buildScheduleCard(schedule),
+          );
+        },
+      ),
     );
   }
 
@@ -795,8 +842,17 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
             style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             textAlign: TextAlign.center,
           ),
+          SizedBox(height: 8),
+          Text(
+            'Pull down to refresh',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[500],
+              fontStyle: FontStyle.italic,
+            ),
+          ),
           SizedBox(height: 16),
-          ElevatedButton(onPressed: _fetchSchedules, child: Text('Retry')),
+          ElevatedButton(onPressed: _refreshData, child: Text('Retry')),
         ],
       ),
     );
@@ -821,6 +877,15 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
           Text(
             'Try adjusting your search terms',
             style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Pull down to refresh',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey[500],
+              fontStyle: FontStyle.italic,
+            ),
           ),
         ],
       ),
