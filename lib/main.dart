@@ -23,21 +23,13 @@ class AuthManager {
 
     final now = DateTime.now();
 
-    // Check app background time
+    // Only check app background time, not inactivity while app is active
     if (_appPausedTime != null) {
       final timeDifference = now.difference(_appPausedTime!);
       if (timeDifference.inMinutes >= 1) {
         return true;
       }
     }
-
-    // // Check inactivity time
-    // if (_lastActivityTime != null) {
-    //   final inactiveTime = now.difference(_lastActivityTime!);
-    //   if (inactiveTime.inMinutes >= 1) {
-    //     return true;
-    //   }
-    // }
 
     return false;
   }
@@ -81,8 +73,13 @@ class AuthManager {
 
   // Method to handle app coming back from background
   static bool handleAppResumed() {
-    // Return true if re-authentication is required
-    return requiresReauth;
+    bool needsReauth = requiresReauth;
+
+    // Reset the pause time since app is now active
+    _appPausedTime = null;
+
+    // Return true if re-authentication was required
+    return needsReauth;
   }
 
   // Method to update last activity time
@@ -95,7 +92,7 @@ class AuthManager {
   // Method to reset re-authentication requirement
   static void clearReauthRequirement() {
     _appPausedTime = null;
-    // _lastActivityTime = DateTime.now(); // Reset activity timer
+    // Reset any re-auth requirements - user is actively using the app
   }
 }
 

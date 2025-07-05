@@ -38,11 +38,6 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     _initializeTimezone();
     _fetchSchedules();
     _fetchBusOperators();
-
-    // Auto-focus the search bar after the widget is built
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchFocusNode.requestFocus();
-    });
   }
 
   void launchInBrowser(String url) async {
@@ -461,7 +456,6 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
                       child: TextField(
                         controller: _searchController,
                         focusNode: _searchFocusNode,
-                        autofocus: true,
                         decoration: InputDecoration(
                           hintText: 'Search operators, routes, or schedules...',
                           prefixIcon: Icon(
