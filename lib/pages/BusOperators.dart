@@ -19,14 +19,85 @@ class _BusOperatorsState extends State<BusOperators> {
   // Dummy data for provincial routes
   // Dummy data for bus operators
   List<Map<String, dynamic>> busOperators = [];
+  List<Map<String, dynamic>> filteredBusOperators = [];
 
   List<Map<String, dynamic>> destinations = [];
+
+  // Search and filter variables
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
+  String selectedOperatorFilter = 'All Operators';
+  String selectedRouteFilter = 'All Routes';
+  List<String> availableOperators = ['All Operators'];
+  List<String> availableRoutes = ['All Routes'];
 
   @override
   void initState() {
     super.initState();
     // You can initialize or manipulate busOperators here if needed
     getDestinations();
+    searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {
+      searchQuery = searchController.text.toLowerCase();
+    });
+    _applyFilters();
+  }
+
+  void _applyFilters() {
+    setState(() {
+      filteredBusOperators = busOperators.where((operator) {
+        bool matchesSearch = true;
+        bool matchesOperator = true;
+        bool matchesRoute = true;
+
+        // Search filter
+        if (searchQuery.isNotEmpty) {
+          String operatorName =
+              operator['bus_operators']['name']?.toLowerCase() ?? '';
+          String routeName = operator['routes']['name']?.toLowerCase() ?? '';
+          matchesSearch =
+              operatorName.contains(searchQuery) ||
+              routeName.contains(searchQuery);
+        }
+
+        // Operator filter
+        if (selectedOperatorFilter != 'All Operators') {
+          matchesOperator =
+              operator['bus_operators']['name'] == selectedOperatorFilter;
+        }
+
+        // Route filter
+        if (selectedRouteFilter != 'All Routes') {
+          matchesRoute = operator['routes']['name'] == selectedRouteFilter;
+        }
+
+        return matchesSearch && matchesOperator && matchesRoute;
+      }).toList();
+    });
+  }
+
+  void _updateAvailableFilters() {
+    Set<String> operators = {'All Operators'};
+    Set<String> routes = {'All Routes'};
+
+    for (var operator in busOperators) {
+      operators.add(operator['bus_operators']['name'] ?? '');
+      routes.add(operator['routes']['name'] ?? '');
+    }
+
+    setState(() {
+      availableOperators = operators.toList()..sort();
+      availableRoutes = routes.toList()..sort();
+    });
   }
 
   Future<void> getDestinations() async {
@@ -89,12 +160,25 @@ class _BusOperatorsState extends State<BusOperators> {
       });
       setState(() {
         busOperators = List<Map<String, dynamic>>.from(operatorRoutes);
+        filteredBusOperators = List<Map<String, dynamic>>.from(operatorRoutes);
       });
+      _updateAvailableFilters();
+      _applyFilters();
     } catch (e) {
       print('Error fetching routes: $e');
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _resetFilters() {
+    setState(() {
+      searchController.clear();
+      searchQuery = '';
+      selectedOperatorFilter = 'All Operators';
+      selectedRouteFilter = 'All Routes';
+    });
+    _applyFilters();
   }
 
   @override
@@ -255,6 +339,163 @@ class _BusOperatorsState extends State<BusOperators> {
                       ),
                     ),
 
+                    // Search and Filter Section (only show when operators are available)
+                    if (showOperators) ...[
+                      SizedBox(height: 16),
+
+                      // Search Bar
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 16),
+                        child: TextField(
+                          controller: searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search operators or routes...',
+                            prefixIcon: Icon(Icons.search, color: Colors.grey),
+                            suffixIcon: searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(Icons.clear, color: Colors.grey),
+                                    onPressed: () {
+                                      searchController.clear();
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(color: Colors.grey[300]!),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[50],
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 12),
+
+                      // Filter Row
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedOperatorFilter,
+                                    hint: Text('Filter by Operator'),
+                                    isExpanded: true,
+                                    items: availableOperators.map((
+                                      String value,
+                                    ) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(
+                                          value,
+                                          style: TextStyle(fontSize: 12),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        selectedOperatorFilter = newValue!;
+                                      });
+                                      _applyFilters();
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedRouteFilter,
+                                    hint: Text('Filter by Route'),
+                                    isExpanded: true,
+                                    items: availableRoutes.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(
+                                          value,
+                                          style: TextStyle(fontSize: 12),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        selectedRouteFilter = newValue!;
+                                      });
+                                      _applyFilters();
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      SizedBox(height: 8),
+
+                      // Filter Results Count and Reset Button
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Showing ${filteredBusOperators.length} of ${busOperators.length} results',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 12,
+                              ),
+                            ),
+                            if (searchQuery.isNotEmpty ||
+                                selectedOperatorFilter != 'All Operators' ||
+                                selectedRouteFilter != 'All Routes')
+                              TextButton(
+                                onPressed: _resetFilters,
+                                child: Text(
+                                  'Clear Filters',
+                                  style: TextStyle(
+                                    color: Theme.of(context).primaryColor,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+
                     // Info text
                     Container(
                       padding: EdgeInsets.all(16),
@@ -279,7 +520,7 @@ class _BusOperatorsState extends State<BusOperators> {
                       ),
                       SizedBox(height: 16),
                       // Use Column instead of Expanded ListView
-                      ...busOperators
+                      ...filteredBusOperators
                           .map(
                             (operator) => Padding(
                               padding: EdgeInsets.symmetric(
