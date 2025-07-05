@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
 import 'package:pitx/pages/WebViewPage.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BusOperators extends StatefulWidget {
   const BusOperators({super.key});
@@ -328,6 +329,51 @@ class _BusOperatorsState extends State<BusOperators> {
     );
   }
 
+  void launchInBrowser(String url) async {
+    try {
+      // Ensure URL has proper protocol
+      String formattedUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        formattedUrl = 'https://$url';
+      }
+
+      final uri = Uri.parse(formattedUrl);
+
+      // Try to launch with external application first
+      if (await canLaunchUrl(uri)) {
+        bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (!launched) {
+          // If external app fails, try platform default
+          await launchUrl(uri, mode: LaunchMode.platformDefault);
+        }
+      } else {
+        // If can't launch, show error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Could not open browser: $formattedUrl'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Handle parsing errors
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening URL: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildOperatorCard(Map<String, dynamic> operator) {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
@@ -355,20 +401,25 @@ class _BusOperatorsState extends State<BusOperators> {
             ),
           );
 
-          // webview to website
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => WebViewPage(
-                url:
-                    operator['bus_operators']['website_url'] ??
-                    Uri.https('google.com', '/search', {
-                      'q':
-                          '${operator['bus_operators']['name']} PITX to ${operator['routes']['name']}',
-                    }).toString(),
-                title: operator['bus_operators']['name'],
-              ),
-            ),
+          launchInBrowser(
+            operator['bus_operators']['website_url'] ??
+                'https://www.google.com/search?q=${Uri.encodeComponent('${operator['bus_operators']['name']} PITX to ${operator['routes']['name']}')}',
           );
+
+          // webview to website
+          // Navigator.of(context).push(
+          //   MaterialPageRoute(
+          //     builder: (context) => WebViewPage(
+          //       url:
+          //           operator['bus_operators']['website_url'] ??
+          //           Uri.https('google.com', '/search', {
+          //             'q':
+          //                 '${operator['bus_operators']['name']} PITX to ${operator['routes']['name']}',
+          //           }).toString(),
+          //       title: operator['bus_operators']['name'],
+          //     ),
+          //   ),
+          // );
         },
         child: Row(
           children: [
