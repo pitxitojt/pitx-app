@@ -28,7 +28,12 @@ class _BusSchedulesState extends State<BusSchedules>
   String selectedStatusFilter = 'All Statuses';
   String selectedTimeFilter = 'All Times';
   List<String> availableStatuses = ['All Statuses'];
-  List<String> availableTimeRanges = ['All Times', 'Morning (5AM-12PM)', 'Afternoon (12PM-6PM)', 'Evening (6PM-12AM)'];
+  List<String> availableTimeRanges = [
+    'All Times',
+    'Morning (5AM-12PM)',
+    'Afternoon (12PM-6PM)',
+    'Evening (6PM-12AM)',
+  ];
 
   @override
   void initState() {
@@ -59,40 +64,46 @@ class _BusSchedulesState extends State<BusSchedules>
     if (_schedules == null) return;
 
     setState(() {
-      _filteredSchedules = _schedules!.map((timeGroup) {
-        List<Map<String, dynamic>> filteredSchedules = timeGroup['schedules']
-            .where((schedule) {
-              bool matchesSearch = true;
-              bool matchesStatus = true;
-              bool matchesTime = true;
+      _filteredSchedules = _schedules!
+          .map((timeGroup) {
+            List<Map<String, dynamic>>
+            filteredSchedules = timeGroup['schedules']
+                .where((schedule) {
+                  bool matchesSearch = true;
+                  bool matchesStatus = true;
+                  bool matchesTime = true;
 
-              // Search filter (destination/route and operator)
-              if (searchQuery.isNotEmpty) {
-                String route = schedule['route']?.toLowerCase() ?? '';
-                String operator = schedule['operator']?.toLowerCase() ?? '';
-                matchesSearch = route.contains(searchQuery) || operator.contains(searchQuery);
-              }
+                  // Search filter (destination/route and operator)
+                  if (searchQuery.isNotEmpty) {
+                    String route = schedule['route']?.toLowerCase() ?? '';
+                    String operator = schedule['operator']?.toLowerCase() ?? '';
+                    matchesSearch =
+                        route.contains(searchQuery) ||
+                        operator.contains(searchQuery);
+                  }
 
-              // Status filter
-              if (selectedStatusFilter != 'All Statuses') {
-                matchesStatus = schedule['status'] == selectedStatusFilter;
-              }
+                  // Status filter
+                  if (selectedStatusFilter != 'All Statuses') {
+                    matchesStatus = schedule['status'] == selectedStatusFilter;
+                  }
 
-              // Time filter
-              if (selectedTimeFilter != 'All Times') {
-                matchesTime = _matchesTimeRange(timeGroup['time'], selectedTimeFilter);
-              }
+                  // Time filter
+                  if (selectedTimeFilter != 'All Times') {
+                    matchesTime = _matchesTimeRange(
+                      timeGroup['time'],
+                      selectedTimeFilter,
+                    );
+                  }
 
-              return matchesSearch && matchesStatus && matchesTime;
-            })
-            .toList()
-            .cast<Map<String, dynamic>>();
+                  return matchesSearch && matchesStatus && matchesTime;
+                })
+                .toList()
+                .cast<Map<String, dynamic>>();
 
-        return {
-          'time': timeGroup['time'],
-          'schedules': filteredSchedules,
-        };
-      }).where((timeGroup) => timeGroup['schedules'].isNotEmpty).toList();
+            return {'time': timeGroup['time'], 'schedules': filteredSchedules};
+          })
+          .where((timeGroup) => timeGroup['schedules'].isNotEmpty)
+          .toList();
     });
   }
 
@@ -852,10 +863,16 @@ class _BusSchedulesState extends State<BusSchedules>
                               controller: searchController,
                               decoration: InputDecoration(
                                 hintText: 'Search destination or operator...',
-                                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                                prefixIcon: Icon(
+                                  Icons.search,
+                                  color: Colors.grey,
+                                ),
                                 suffixIcon: searchQuery.isNotEmpty
                                     ? IconButton(
-                                        icon: Icon(Icons.clear, color: Colors.grey),
+                                        icon: Icon(
+                                          Icons.clear,
+                                          color: Colors.grey,
+                                        ),
                                         onPressed: () {
                                           searchController.clear();
                                         },
@@ -867,7 +884,10 @@ class _BusSchedulesState extends State<BusSchedules>
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
                               ),
                             ),
                           ),
@@ -879,7 +899,10 @@ class _BusSchedulesState extends State<BusSchedules>
                             children: [
                               Expanded(
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
@@ -889,7 +912,9 @@ class _BusSchedulesState extends State<BusSchedules>
                                       value: selectedStatusFilter,
                                       hint: Text('Filter by Status'),
                                       isExpanded: true,
-                                      items: availableStatuses.map((String value) {
+                                      items: availableStatuses.map((
+                                        String value,
+                                      ) {
                                         return DropdownMenuItem<String>(
                                           value: value,
                                           child: Text(
@@ -912,7 +937,10 @@ class _BusSchedulesState extends State<BusSchedules>
                               SizedBox(width: 8),
                               Expanded(
                                 child: Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(8),
@@ -922,7 +950,9 @@ class _BusSchedulesState extends State<BusSchedules>
                                       value: selectedTimeFilter,
                                       hint: Text('Filter by Time'),
                                       isExpanded: true,
-                                      items: availableTimeRanges.map((String value) {
+                                      items: availableTimeRanges.map((
+                                        String value,
+                                      ) {
                                         return DropdownMenuItem<String>(
                                           value: value,
                                           child: Text(
@@ -958,8 +988,8 @@ class _BusSchedulesState extends State<BusSchedules>
                                   fontSize: 12,
                                 ),
                               ),
-                              if (searchQuery.isNotEmpty || 
-                                  selectedStatusFilter != 'All Statuses' || 
+                              if (searchQuery.isNotEmpty ||
+                                  selectedStatusFilter != 'All Statuses' ||
                                   selectedTimeFilter != 'All Times')
                                 TextButton(
                                   onPressed: _resetFilters,
@@ -1016,10 +1046,13 @@ class _BusSchedulesState extends State<BusSchedules>
                                   ListView.builder(
                                     shrinkWrap: true,
                                     physics: NeverScrollableScrollPhysics(),
-                                    itemCount: (_filteredSchedules ?? _schedules ?? []).length,
+                                    itemCount:
+                                        (_filteredSchedules ?? _schedules ?? [])
+                                            .length,
                                     itemBuilder: (context, index) {
                                       return buildTimeSection(
-                                        (_filteredSchedules ?? _schedules)![index],
+                                        (_filteredSchedules ??
+                                            _schedules)![index],
                                       );
                                     },
                                   ),
