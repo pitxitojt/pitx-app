@@ -31,7 +31,7 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _startInactivityTimer();
     // Register initial activity
-    AuthManager.updateActivity();
+    // AuthManager.updateActivity();
   }
 
   @override
@@ -54,10 +54,10 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
     });
   }
 
-  void _onUserInteraction() {
-    // Update activity time when user interacts
-    AuthManager.updateActivity();
-  }
+  // void _onUserInteraction() {
+  //   // Update activity time when user interacts
+  //   AuthManager.updateActivity();
+  // }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -88,7 +88,7 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
   }
 
   void setCurrentPage(int index) {
-    _onUserInteraction(); // Track user interaction
+    // _onUserInteraction(); // Track user interaction
     setState(() {
       _currentPage = index;
     });
@@ -104,13 +104,13 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Listener(
-      onPointerDown: (_) => _onUserInteraction(),
-      onPointerMove: (_) => _onUserInteraction(),
-      onPointerUp: (_) => _onUserInteraction(),
+      // onPointerDown: (_) => _onUserInteraction(),
+      // onPointerMove: (_) => _onUserInteraction(),
+      // onPointerUp: (_) => _onUserInteraction(),
       child: GestureDetector(
-        onTap: _onUserInteraction,
-        onPanDown: (_) => _onUserInteraction(),
-        onScaleStart: (_) => _onUserInteraction(),
+        onTap: () {}, //_onUserInteraction,
+        onPanDown: (_) {},
+        onScaleStart: (_) {},
         behavior: HitTestBehavior.translucent,
         child: Scaffold(
           body: IndexedStack(

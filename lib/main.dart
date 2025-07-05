@@ -13,13 +13,13 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 class AuthManager {
   static bool _isLoggedIn = false;
   static DateTime? _appPausedTime;
-  static DateTime? _lastActivityTime;
+  // static DateTime? _lastActivityTime;
   static final List<Function(bool)> _listeners = [];
 
   static bool get isLoggedIn => _isLoggedIn;
 
   static bool get requiresReauth {
-    if (_appPausedTime == null && _lastActivityTime == null) return false;
+    if (_appPausedTime == null) return false;
 
     final now = DateTime.now();
 
@@ -31,13 +31,13 @@ class AuthManager {
       }
     }
 
-    // Check inactivity time
-    if (_lastActivityTime != null) {
-      final inactiveTime = now.difference(_lastActivityTime!);
-      if (inactiveTime.inMinutes >= 1) {
-        return true;
-      }
-    }
+    // // Check inactivity time
+    // if (_lastActivityTime != null) {
+    //   final inactiveTime = now.difference(_lastActivityTime!);
+    //   if (inactiveTime.inMinutes >= 1) {
+    //     return true;
+    //   }
+    // }
 
     return false;
   }
@@ -86,16 +86,16 @@ class AuthManager {
   }
 
   // Method to update last activity time
-  static void updateActivity() {
-    if (_isLoggedIn) {
-      _lastActivityTime = DateTime.now();
-    }
-  }
+  // static void updateActivity() {
+  //   if (_isLoggedIn) {
+  //     _lastActivityTime = DateTime.now();
+  //   }
+  // }
 
   // Method to reset re-authentication requirement
   static void clearReauthRequirement() {
     _appPausedTime = null;
-    _lastActivityTime = DateTime.now(); // Reset activity timer
+    // _lastActivityTime = DateTime.now(); // Reset activity timer
   }
 }
 
