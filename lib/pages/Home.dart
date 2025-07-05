@@ -3,6 +3,7 @@ import 'package:pitx/pages/BusOperators.dart';
 import 'package:pitx/pages/BusSchedules.dart';
 import 'package:pitx/pages/FAQ.dart';
 import 'package:pitx/pages/Food.dart';
+import 'package:pitx/pages/WebViewPage.dart';
 import 'package:pitx/screens/Notifications.dart';
 import 'package:pitx/main.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -523,12 +524,24 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                             color: Colors.transparent,
                             child: InkWell(
                               onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        item['page'] ?? Container(),
-                                  ),
-                                );
+                                // Check if the tapped item is the Food menu
+                                if (item['label'] == 'Food') {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => WebViewPage(
+                                        url: 'https://okpo.com/pitx',
+                                        title: 'Food',
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          item['page'] ?? Container(),
+                                    ),
+                                  );
+                                }
                               },
                               borderRadius: BorderRadius.circular(16),
                               child: Container(
@@ -729,7 +742,12 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                           GestureDetector(
                             onTap: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(builder: (context) => Food()),
+                                MaterialPageRoute(
+                                  builder: (context) => WebViewPage(
+                                    url: 'https://okpo.com/pitx',
+                                    title: 'Food',
+                                  ),
+                                ),
                               );
                             },
                             child: Container(

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/main.dart';
+import 'package:pitx/pages/WebViewPage.dart';
+import 'package:intl/intl.dart';
 
 class BusOperators extends StatefulWidget {
   const BusOperators({super.key});
@@ -8,54 +11,90 @@ class BusOperators extends StatefulWidget {
 }
 
 class _BusOperatorsState extends State<BusOperators> {
-  String selectedRoute = 'Select Provincial Route';
+  String selectedRoute = 'Select Destination';
   bool showOperators = false;
 
+  bool _isLoading = false;
   // Dummy data for provincial routes
-  final List<String> provincialRoutes = [
-    'Manila to Baguio',
-    'Manila to Davao',
-    'Manila to Iloilo',
-    'Manila to Cebu',
-    'Manila to Cagayan de Oro',
-    'Manila to Dumaguete',
-    'Manila to Tuguegarao',
-    'Manila to Legazpi',
-  ];
-
   // Dummy data for bus operators
-  final List<Map<String, dynamic>> busOperators = [
-    {
-      'time': '08:10',
-      'endTime': '07:51',
-      'destination': 'Baguio',
-      'operator': 'SOLID NORTH',
-      'code': 'SN951',
-      'additionalInfo': 'AIR123 (+3)',
-      'lastBagOn': 'Terminal 3',
-      'baggage': '32',
-    },
-    {
-      'time': '08:45',
-      'endTime': '08:01',
-      'destination': 'Baguio',
-      'operator': 'GENESIS',
-      'code': 'GEN624',
-      'additionalInfo': 'EVY128 (+2)',
-      'lastBagOn': 'Terminal 3',
-      'baggage': '48',
-    },
-    {
-      'time': '09:20',
-      'endTime': '08:13',
-      'destination': 'Baguio',
-      'operator': 'VICTORY LINER',
-      'code': 'VL892',
-      'additionalInfo': 'VIC445 (+1)',
-      'lastBagOn': 'Terminal 2',
-      'baggage': '28',
-    },
-  ];
+  List<Map<String, dynamic>> busOperators = [];
+
+  List<Map<String, dynamic>> destinations = [];
+
+  @override
+  void initState() {
+    super.initState();
+    // You can initialize or manipulate busOperators here if needed
+    getDestinations();
+  }
+
+  Future<void> getDestinations() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final response = await supabase
+          .from('destination')
+          .select()
+          .order('name', ascending: true);
+      print("destinations: ");
+      print(response);
+      setState(() {
+        destinations = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      print('Error fetching destinations: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> getRoutes() async {
+    setState(() => _isLoading = true);
+    try {
+      // Step 1: Get all route IDs where destination = selectedRoute
+      final List routeRows = await supabase
+          .from('routes')
+          .select('id, destination')
+          .eq('destination', selectedRoute)
+          .order('name', ascending: true);
+
+      final List<int> sortedRouteIds = routeRows
+          .map((r) => r['id'] as int)
+          .toList();
+
+      // Step 2: Get operator routes that match those route IDs
+      final List operatorRoutes = await supabase
+          .from('bus_operator_routes')
+          .select('routes(id, name), bus_operators(name, website_url)')
+          .inFilter('route_id', sortedRouteIds);
+
+      operatorRoutes.sort((a, b) {
+        // First, sort by route ID (to maintain route order)
+        int routeComparison = sortedRouteIds
+            .indexOf(a['routes']['id'])
+            .compareTo(sortedRouteIds.indexOf(b['routes']['id']));
+
+        // If routes are the same, sort by bus operator name alphabetically
+        if (routeComparison == 0) {
+          String operatorA = a['bus_operators']['name'] ?? '';
+          String operatorB = b['bus_operators']['name'] ?? '';
+          return operatorA.compareTo(operatorB);
+        }
+
+        return routeComparison;
+      });
+      setState(() {
+        busOperators = List<Map<String, dynamic>>.from(operatorRoutes);
+      });
+    } catch (e) {
+      print('Error fetching routes: $e');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,36 +205,6 @@ class _BusOperatorsState extends State<BusOperators> {
                               letterSpacing: 0.2,
                             ),
                           ),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).primaryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.qr_code_scanner,
-                                  color: Theme.of(context).primaryColor,
-                                  size: 18,
-                                ),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Scan',
-                                  style: TextStyle(
-                                    color: Theme.of(context).primaryColor,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -245,77 +254,11 @@ class _BusOperatorsState extends State<BusOperators> {
                       ),
                     ),
 
-                    // Trip type tabs
-                    Container(
-                      margin: EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.departure_board,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Arrival',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.directions_bus,
-                                  color: Colors.grey,
-                                  size: 16,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Departure',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
                     // Info text
                     Container(
                       padding: EdgeInsets.all(16),
                       child: Text(
-                        'Updated at 24 Jun 2025\nTap to load earlier routes',
+                        'Updated as of ${DateFormat('MMMM d, yyyy').format(DateTime.now())}',
                         style: TextStyle(color: Colors.grey[600], fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
@@ -326,7 +269,7 @@ class _BusOperatorsState extends State<BusOperators> {
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          'Route details may change without notice. Please check again closer to the scheduled route time.',
+                          'Route details may change without notice.',
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 11,
@@ -407,161 +350,82 @@ class _BusOperatorsState extends State<BusOperators> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Redirecting to ${operator['operator']} booking page...',
+                'Redirecting to ${operator['bus_operators']['name']} booking page...',
+              ),
+            ),
+          );
+
+          // webview to website
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => WebViewPage(
+                url:
+                    operator['bus_operators']['website_url'] ??
+                    Uri.https('google.com', '/search', {
+                      'q':
+                          '${operator['bus_operators']['name']} PITX to ${operator['routes']['name']}',
+                    }).toString(),
+                title: operator['bus_operators']['name'],
               ),
             ),
           );
         },
-        child: Column(
+        child: Row(
           children: [
-            Row(
-              children: [
-                // Time section
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      operator['time'],
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+            // Route section
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Route',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
                     ),
-                    Text(
-                      operator['endTime'],
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-
-                SizedBox(width: 16),
-
-                // Route arrow and destination
-                Expanded(
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.directions_bus,
-                            color: Theme.of(context).primaryColor,
-                            size: 16,
-                          ),
-                          Expanded(
-                            child: Container(
-                              height: 1,
-                              color: Colors.grey[300],
-                              margin: EdgeInsets.symmetric(horizontal: 8),
-                            ),
-                          ),
-                          Icon(
-                            Icons.location_on,
-                            color: Theme.of(context).primaryColor,
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        operator['destination'],
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-
-                SizedBox(width: 16),
-
-                // Operator info
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        operator['operator'],
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  SizedBox(height: 4),
+                  Text(
+                    '${operator['routes']['name']}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      operator['code'],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                    Text(
-                      operator['additionalInfo'],
-                      style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
 
-            SizedBox(height: 12),
+            SizedBox(width: 16),
 
-            // Bottom info
-            Row(
+            // Operator section
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Last Bag On',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                      ),
-                      Text(
-                        operator['lastBagOn'],
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      'Baggage Belt',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 10),
-                    ),
-                    Text(
-                      operator['baggage'],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(width: 16),
-                Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Icon(
-                    Icons.info_outline,
+                Text(
+                  'Operator',
+                  style: TextStyle(
+                    fontSize: 12,
                     color: Colors.grey[600],
-                    size: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    operator['bus_operators']['name'],
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -601,7 +465,7 @@ class _BusOperatorsState extends State<BusOperators> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Select Provincial Route',
+                      'Select Destination',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -619,17 +483,25 @@ class _BusOperatorsState extends State<BusOperators> {
             Expanded(
               child: ListView.builder(
                 padding: EdgeInsets.all(16),
-                itemCount: provincialRoutes.length,
+                itemCount: destinations.length,
                 itemBuilder: (context, index) {
+                  if (_isLoading) {
+                    return Center(
+                      child: CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    );
+                  }
                   return ListTile(
-                    title: Text(provincialRoutes[index]),
+                    title: Text(destinations[index]['name']),
                     trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
+                    onTap: () async {
                       setState(() {
-                        selectedRoute = provincialRoutes[index];
+                        selectedRoute = destinations[index]['name'];
                         showOperators = true;
                       });
                       Navigator.pop(context);
+                      await getRoutes();
                     },
                   );
                 },

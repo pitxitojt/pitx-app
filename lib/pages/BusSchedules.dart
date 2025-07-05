@@ -193,6 +193,8 @@ class _BusSchedulesState extends State<BusSchedules>
           status = "DELAYED";
       } else if (item[6] == "2") {
         status = "DELAYED";
+      } else if (item[6] == "6") {
+        status = "BOARDING";
       }
     }
     if (status.isNotEmpty) {
@@ -336,7 +338,7 @@ class _BusSchedulesState extends State<BusSchedules>
       case 'DEPARTED':
         return Color(0xFF3B82F6); // Modern blue
       default:
-        return Color(0xFFEF4444); // Default modern blue
+        return Color.fromARGB(255, 179, 239, 68); // Default modern blue
     }
   }
 
