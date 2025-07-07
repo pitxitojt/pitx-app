@@ -40,7 +40,6 @@ class _BusOperatorsState extends State<BusOperators> {
     getDestinations();
     searchController.addListener(_onSearchChanged);
     scrollController.addListener(_onScroll);
-    print('ScrollController listener added in BusOperators');
   }
 
   void _onScroll() {
