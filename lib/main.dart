@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:pitx/screens/Base.dart';
 import 'package:pitx/screens/Welcome.dart';
 import 'package:pitx/auth/Login.dart';
 import 'package:pitx/auth/SetPin.dart';
 import 'package:pitx/auth/Signup.dart';
 import 'package:pitx/auth/ProfileCompletion.dart';
+import 'package:pitx/themes/red.dart';
+import 'package:pitx/themes/default.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
@@ -105,38 +107,45 @@ Future<void> main() async {
     anonKey:
         'SUPABASE_ANON_KEY',
   );
-  runApp(const MyApp());
+
+  final prefs = await SharedPreferences.getInstance();
+  final isDark = await prefs.getBool('dark_mode_enabled') ?? false;
+
+  runApp(MyApp(isAlternateThemeEnabled: isDark));
 }
 
 final supabase = Supabase.instance.client;
+final ValueNotifier<bool> isAlternateThemeEnabledNotifier = ValueNotifier<bool>(
+  false,
+);
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isAlternateThemeEnabled;
+  MyApp({super.key, required this.isAlternateThemeEnabled}) {
+    isAlternateThemeEnabledNotifier.value = isAlternateThemeEnabled;
+  }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PITX',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Color(0xff1d439b),
-          primary: Color(0xff1d439b),
-          onPrimary: Colors.white,
-        ),
-        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
-        fontFamily: GoogleFonts.poppins().fontFamily,
-      ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const Initialization(title: 'PITX'),
-        '/welcome': (context) => const Welcome(),
-        '/login': (context) => const Login(),
-        '/signup': (context) => const Signup(),
-        '/profile-completion': (context) => const ProfileCompletion(),
-        '/set-pin': (context) => const SetPin(),
-        '/home': (context) => const Base(),
-        // '/phone-verification': (context) => const PhoneVerification(),
+    return ValueListenableBuilder(
+      valueListenable: isAlternateThemeEnabledNotifier,
+      builder: (_, isAlternateTheme, _) {
+        return MaterialApp(
+          title: 'PITX',
+          theme: isAlternateTheme ? redTheme : defaultTheme,
+          initialRoute: '/',
+          routes: {
+            '/': (context) => const Initialization(title: 'PITX'),
+            '/welcome': (context) => const Welcome(),
+            '/login': (context) => const Login(),
+            '/signup': (context) => const Signup(),
+            '/profile-completion': (context) => const ProfileCompletion(),
+            '/set-pin': (context) => const SetPin(),
+            '/home': (context) => const Base(),
+            // '/phone-verification': (context) => const PhoneVerification(),
+          },
+        );
       },
     );
   }

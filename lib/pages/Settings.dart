@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:pitx/main.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -39,6 +40,21 @@ class _SettingsState extends State<Settings> {
       setState(() {
         _isBiometricAvailable = false;
       });
+    }
+  }
+
+  Future<void> _toggleAlternateTheme(bool value) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('dark_mode_enabled', value);
+    isAlternateThemeEnabledNotifier.value = value;
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(!value ? 'Red theme disabled' : 'Red theme enabled'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -347,8 +363,74 @@ class _SettingsState extends State<Settings> {
                             ),
                           ),
                         ),
-
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 16),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.palette_outlined,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Toggle Red Theme',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isAlternateThemeEnabledNotifier.value
+                                          ? 'Red theme currently enabled'
+                                          : 'Toggle to enable alternate red theme',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Switch(
+                                value: isAlternateThemeEnabledNotifier.value,
+                                onChanged: _toggleAlternateTheme,
+                                activeColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
