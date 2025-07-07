@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:pitx/pages/Discover.dart';
 import 'package:pitx/pages/Home.dart';
 import 'package:pitx/pages/Profile.dart';
 import 'package:pitx/pages/Search.dart';
@@ -20,7 +19,7 @@ class _BaseState extends State<Base> with WidgetsBindingObserver {
 
   final List<Map<String, dynamic>> _bottomNavIcons = [
     {'label': "Home", 'icon': Icons.home, 'page': Home()},
-    {'label': "Discover", 'icon': Icons.explore, 'page': Discover()},
+    // {'label': "Discover", 'icon': Icons.explore, 'page': Discover()},
     {'label': "Search", 'icon': Icons.search, 'page': Search()},
     {'label': "Profile", 'icon': Icons.person, 'page': Profile()},
   ];
