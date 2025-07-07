@@ -211,6 +211,7 @@ class _SetPinState extends State<SetPin> {
             }
           },
           child: TextField(
+            obscureText: true,
             controller: _pinControllers[index],
             focusNode: _focusNodes[index],
             keyboardType: TextInputType.number,

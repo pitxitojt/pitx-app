@@ -6,7 +6,12 @@ import 'dart:async';
 
 class PhoneVerification extends StatefulWidget {
   final String phoneNumber;
-  const PhoneVerification({super.key, required this.phoneNumber});
+  final bool forgotPin;
+  const PhoneVerification({
+    super.key,
+    required this.phoneNumber,
+    this.forgotPin = false,
+  });
 
   @override
   State<PhoneVerification> createState() => _PhoneVerificationState();
@@ -60,7 +65,10 @@ class _PhoneVerificationState extends State<PhoneVerification> {
   Future<void> _sendOtp() async {
     try {
       // Send OTP
-      await supabase.auth.signInWithOtp(phone: number);
+      await supabase.auth.signInWithOtp(
+        phone: number,
+        shouldCreateUser: !widget.forgotPin,
+      );
     } catch (e) {
       print("OTP sending failed: $e");
       // Show demo message when OTP is disabled
@@ -108,8 +116,18 @@ class _PhoneVerificationState extends State<PhoneVerification> {
         setState(() {
           _isVerifying = false;
         });
-        AuthManager.setLoggedIn(true);
-        await _checkProfileAndNavigate();
+
+        if (widget.forgotPin) {
+          // If this is a forgot password flow, we can skip profile check
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/set-pin',
+            (route) => false,
+          );
+        } else {
+          AuthManager.setLoggedIn(true);
+          await _checkProfileAndNavigate();
+        }
       } else {
         setState(() {
           _isVerifying = false;
@@ -131,6 +149,15 @@ class _PhoneVerificationState extends State<PhoneVerification> {
       // Get current user data
       final user = supabase.auth.currentUser;
       if (user != null) {
+        if (widget.forgotPin) {
+          // If this is a forgot password flow, we can skip profile check
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/set-pin',
+            (route) => false,
+          );
+        }
+
         final userData = user.userMetadata;
 
         // Check if user has required profile information
@@ -251,21 +278,39 @@ class _PhoneVerificationState extends State<PhoneVerification> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Enter the 6-digit verification code sent to',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                    Text(
-                      number,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white.withOpacity(0.9),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    widget.forgotPin
+                        ? Text.rich(
+                            TextSpan(
+                              text:
+                                  'Enter the 6-digit verification code sent to your number ending in ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: number.substring(number.length - 4),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Text.rich(
+                            TextSpan(
+                              text:
+                                  'Enter the 6-digit verification code sent to ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: number,
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
                   ],
                 ),
               ),

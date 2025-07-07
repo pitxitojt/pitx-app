@@ -99,7 +99,7 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
       initialDate: DateTime(1990),
       firstDate: DateTime(1900),
       lastDate: DateTime.now().subtract(
-        Duration(days: 365 * 16),
+        Duration(days: 365 * 18),
       ), // Minimum 16 years old
       builder: (context, child) {
         return Theme(
@@ -374,6 +374,9 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
             controller: controller,
             onChanged: (value) => setState(() {}),
             style: TextStyle(fontSize: 16),
+            inputFormatters: label == 'First Name' || label == 'Last Name'
+                ? [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-Z\s\-']"))]
+                : null,
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(

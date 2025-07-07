@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pitx/auth/PhoneVerification.dart';
 import 'package:pitx/main.dart';
 import 'dart:async';
 import 'package:bcrypt/bcrypt.dart';
@@ -331,6 +332,43 @@ class _LoginState extends State<Login> with TickerProviderStateMixin {
                                         const SizedBox(width: 8),
                                         Icon(Icons.arrow_forward, size: 20),
                                       ],
+                                    ),
+                                  ),
+                                ),
+
+                                const SizedBox(height: 12),
+
+                                // Forgot PIN? TextButton
+                                Center(
+                                  child: TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) {
+                                            return PhoneVerification(
+                                              forgotPin: true,
+                                              phoneNumber:
+                                                  (supabase
+                                                          .auth
+                                                          .currentUser!
+                                                          .phone)
+                                                      ?.substring(2) ??
+                                                  "",
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      'Forgot PIN?',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 15,
+                                      ),
                                     ),
                                   ),
                                 ),
