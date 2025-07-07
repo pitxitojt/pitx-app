@@ -41,7 +41,7 @@ class _ChatbotPageState extends State<ChatbotPage>
 
   // Predefined responses for common questions
   final Map<String, String> _responses = {
-    'hello': 'Hello! Welcome to PITX. How can I help you today?',
+    'hello': 'Hello, friend! Welcome to PITX. How can I help you today?',
     'hi':
         'Hi there! I\'m here to help you with information about PITX services.',
     'hours':
@@ -67,12 +67,13 @@ class _ChatbotPageState extends State<ChatbotPage>
     'location':
         'PITX is accessible via SLEX. You can also take buses, jeepneys, or UV Express with "PITX" signage.',
     'thanks':
-        'You\'re welcome! Is there anything else you\'d like to know about PITX?',
+        'You\'re welcome, friend! Is there anything else you\'d like to know about PITX?',
     'thank you':
-        'You\'re welcome! Feel free to ask if you have any other questions.',
-    'bye': 'Goodbye! Have a safe trip and thank you for using PITX services.',
+        'You\'re welcome, friend! Feel free to ask if you have any other questions.',
+    'bye':
+        'Goodbye, friend! Have a safe trip and thank you for using PITX services.',
     'goodbye':
-        'Goodbye! Have a safe trip and thank you for using PITX services.',
+        'Goodbye, friend! Have a safe trip and thank you for using PITX services.',
   };
 
   @override
@@ -88,7 +89,7 @@ class _ChatbotPageState extends State<ChatbotPage>
     _addMessage(
       ChatMessage(
         text:
-            'Hello! I\'m PITX Assistant. How can I help you today?\n\nTap on any of the suggestions below or type your question.',
+            'Hello, friend! I\'m PITX Assistant. How can I help you today?\n\nTap on any of the suggestions below or type your question.',
         isUser: false,
         timestamp: DateTime.now(),
       ),
@@ -140,19 +141,30 @@ class _ChatbotPageState extends State<ChatbotPage>
     // Check for keywords
     if (message.contains('time') ||
         message.contains('open') ||
-        message.contains('close')) {
+        message.contains('close') ||
+        message.contains('oras') ||
+        message.contains('bukas') ||
+        message.contains('sara')) {
       return _responses['hours']!;
     } else if (message.contains('bus') && message.contains('schedule')) {
       return _responses['schedule']!;
-    } else if (message.contains('where') || message.contains('how to get')) {
+    } else if (message.contains('where') ||
+        message.contains('how to get') ||
+        message.contains('saan') ||
+        message.contains('lokasyon')) {
       return _responses['location']!;
     } else if (message.contains('ticket') || message.contains('book')) {
       return _responses['booking']!;
-    } else if (message.contains('eat') || message.contains('restaurant')) {
+    } else if (message.contains('eat') ||
+        message.contains('restaurant') ||
+        message.contains('kain') ||
+        message.contains('pagkain') ||
+        message.contains('dining')) {
       return _responses['food']!;
     } else if (message.contains('wifi') ||
         message.contains('atm') ||
-        message.contains('restroom')) {
+        message.contains('restroom') ||
+        message.contains('cr')) {
       return _responses['facilities']!;
     } else if (message.contains('help') ||
         message.contains('what can you do')) {

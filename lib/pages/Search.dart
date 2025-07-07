@@ -647,9 +647,9 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     final quickSearches = [
       'Baguio',
       'Victory Liner',
-      'Morning Schedules',
+      'Batangas',
       'Bicol',
-      'Genesis',
+      'Solid North',
     ];
 
     return Column(
