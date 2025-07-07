@@ -619,7 +619,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
           Icon(Icons.search, size: 80, color: Colors.grey[300]),
           SizedBox(height: 24),
           Text(
-            'Search for Bus Information',
+            'Search',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,

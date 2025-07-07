@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
 import 'package:pitx/pages/Settings.dart';
-import 'package:pitx/pages/Search.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Profile extends StatefulWidget {

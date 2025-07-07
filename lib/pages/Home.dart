@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:pitx/pages/BusOperators.dart';
 import 'package:pitx/pages/BusSchedules.dart';
 import 'package:pitx/pages/FAQ.dart';
@@ -507,6 +508,7 @@ class _HomeState extends State<Home> with WidgetsBindingObserver {
                         ],
                       ),
                       SizedBox(height: 20),
+
                       GridView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
