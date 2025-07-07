@@ -10,6 +10,7 @@ import 'package:pitx/themes/default.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // Utility class to manage authentication state
 class AuthManager {
@@ -101,11 +102,11 @@ class AuthManager {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   usePathUrlStrategy();
+  await dotenv.load();
   // hide anonKey in public repo
   await Supabase.initialize(
-    url: 'SUPABASE_URL',
-    anonKey:
-        'SUPABASE_ANON_KEY',
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
   final prefs = await SharedPreferences.getInstance();
