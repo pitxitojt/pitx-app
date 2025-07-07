@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pitx/pages/ChatbotPage.dart';
 
 class FAQ extends StatefulWidget {
   const FAQ({super.key});
@@ -102,14 +103,29 @@ class _FAQState extends State<FAQ> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (context) => ChatbotPage()));
+        },
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        shape: CircleBorder(),
+        child: Icon(
+          Icons.chat_outlined,
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
+      ),
       appBar: AppBar(
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.white),
+        iconTheme: IconThemeData(
+          color: Theme.of(context).colorScheme.onPrimary,
+        ),
         centerTitle: true,
         title: Text(
           'FAQ',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),

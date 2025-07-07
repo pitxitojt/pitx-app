@@ -88,7 +88,6 @@ class _NotificationsState extends State<Notifications>
             schema: 'public',
             table: 'notifications',
             callback: (payload) async {
-              print('Notification payload: $payload');
               if (mounted) {
                 await fetchNotifications();
               }

@@ -243,15 +243,8 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
       }
     }
 
-    // Convert operator routes to the expected format
-    List<Map<String, dynamic>> operators = [];
-    operatorRoutes.forEach((operator, routes) {
-      operators.add({'name': operator, 'routes': routes.toList()});
-    });
-
     setState(() {
       _busSchedules = schedules;
-      _busOperators = operators;
     });
   }
 
@@ -355,6 +348,9 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
     if (_searchQuery.isNotEmpty) {
       // Set up debounce timer
       _debounceTimer = Timer(Duration(milliseconds: 500), () {
+        _busOperators = [];
+        _busSchedules = [];
+        _errorMessage = null;
         _fetchDataWithSearch();
       });
     } else {
@@ -934,7 +930,7 @@ class _SearchState extends State<Search> with TickerProviderStateMixin {
           );
           launchInBrowser(
             operator['website_url'] ??
-                'https://www.google.com/search?q=${Uri.encodeComponent('${operator['name']}}')}',
+                'https://www.google.com/search?q=${Uri.encodeComponent('${operator['name']}')}',
           );
         },
         borderRadius: BorderRadius.circular(12),

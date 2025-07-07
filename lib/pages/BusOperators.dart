@@ -15,6 +15,9 @@ class _BusOperatorsState extends State<BusOperators> {
   bool showOperators = false;
 
   bool _isLoading = false;
+  ScrollController scrollController = ScrollController();
+  bool _showFloatingActionButton = false;
+
   // Dummy data for provincial routes
   // Dummy data for bus operators
   List<Map<String, dynamic>> busOperators = [];
@@ -36,11 +39,27 @@ class _BusOperatorsState extends State<BusOperators> {
     // You can initialize or manipulate busOperators here if needed
     getDestinations();
     searchController.addListener(_onSearchChanged);
+    scrollController.addListener(_onScroll);
+    print('ScrollController listener added in BusOperators');
+  }
+
+  void _onScroll() {
+    if (scrollController.hasClients) {
+      double scrollPosition = scrollController.position.pixels;
+      bool shouldShow = scrollPosition > 500;
+
+      if (shouldShow != _showFloatingActionButton) {
+        setState(() {
+          _showFloatingActionButton = shouldShow;
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
     searchController.dispose();
+    scrollController.dispose();
     super.dispose();
   }
 
@@ -108,8 +127,6 @@ class _BusOperatorsState extends State<BusOperators> {
           .from('destination')
           .select()
           .order('name', ascending: true);
-      print("destinations: ");
-      print(response);
       setState(() {
         destinations = List<Map<String, dynamic>>.from(response);
       });
@@ -183,6 +200,21 @@ class _BusOperatorsState extends State<BusOperators> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: _showFloatingActionButton
+          ? FloatingActionButton(
+              onPressed: () {
+                if (scrollController.hasClients) {
+                  scrollController.animateTo(
+                    0,
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Icon(Icons.arrow_upward, color: Colors.white),
+            )
+          : null,
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
         iconTheme: IconThemeData(
@@ -212,6 +244,7 @@ class _BusOperatorsState extends State<BusOperators> {
           ),
         ),
         child: SingleChildScrollView(
+          controller: scrollController,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

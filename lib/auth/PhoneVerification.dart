@@ -132,7 +132,6 @@ class _PhoneVerificationState extends State<PhoneVerification> {
       final user = supabase.auth.currentUser;
       if (user != null) {
         final userData = user.userMetadata;
-        print("User metadata: $userData");
 
         // Check if user has required profile information
         final firstName = userData?['first_name'];

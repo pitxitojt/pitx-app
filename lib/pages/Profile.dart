@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
 import 'package:pitx/pages/Settings.dart';
+import 'package:pitx/pages/Search.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -102,6 +104,32 @@ class _ProfileState extends State<Profile> {
     setState(() {
       _user = supabase.auth.currentUser;
     });
+  }
+
+  Future<void> _onMenuTap(String label) async {
+    switch (label) {
+      case 'Logout':
+        await _showLogoutConfirmation();
+        break;
+      case 'Settings':
+        // Navigate to Settings page
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => const Settings()));
+        break;
+      case 'About PITX':
+        launchUrl(
+          Uri.parse('https://www.pitx.ph/about/about-pitx/'),
+          mode: LaunchMode.externalApplication,
+        );
+        break;
+      case 'Contact Us':
+        launchUrl(
+          Uri.parse('https://www.pitx.ph/contact-us/'),
+          mode: LaunchMode.externalApplication,
+        );
+        break;
+    }
   }
 
   @override
@@ -238,20 +266,8 @@ class _ProfileState extends State<Profile> {
                           child: Material(
                             color: Colors.transparent,
                             child: InkWell(
-                              onTap: () async {
-                                print("Tapped on ${item['label']}");
-                                if (item['label'] == 'Logout') {
-                                  // Show confirmation dialog before logout
-                                  await _showLogoutConfirmation();
-                                } else if (item['label'] == 'Settings') {
-                                  // Navigate to Settings page
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => const Settings(),
-                                    ),
-                                  );
-                                }
-                              },
+                              onTap: () async =>
+                                  await _onMenuTap(item['label']),
                               borderRadius: BorderRadius.circular(16),
                               child: Padding(
                                 padding: EdgeInsets.all(16),

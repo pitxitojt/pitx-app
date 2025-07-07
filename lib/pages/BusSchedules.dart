@@ -21,6 +21,8 @@ class _BusSchedulesState extends State<BusSchedules>
   bool _isLoading = true;
   Timer? _refreshTimer;
   late tz.Location _manilaLocation;
+  ScrollController scrollController = ScrollController();
+  bool _showFloatingActionButton = false;
 
   // Search and filter variables
   TextEditingController searchController = TextEditingController();
@@ -41,13 +43,25 @@ class _BusSchedulesState extends State<BusSchedules>
     WidgetsBinding.instance.addObserver(this);
     _initializeTimezone();
     searchController.addListener(_onSearchChanged);
+    scrollController.addListener(_onScroll);
     fetchSchedules();
     _startRefreshTimer();
+  }
+
+  void _onScroll() {
+    bool shouldShow =
+        scrollController.hasClients && scrollController.position.pixels > 500;
+    if (shouldShow != _showFloatingActionButton) {
+      setState(() {
+        _showFloatingActionButton = shouldShow;
+      });
+    }
   }
 
   @override
   void dispose() {
     searchController.dispose();
+    scrollController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
     super.dispose();
@@ -783,6 +797,21 @@ class _BusSchedulesState extends State<BusSchedules>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: _showFloatingActionButton
+          ? FloatingActionButton(
+              onPressed: () {
+                if (scrollController.hasClients) {
+                  scrollController.animateTo(
+                    0,
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                }
+              },
+              backgroundColor: Theme.of(context).primaryColor,
+              child: Icon(Icons.arrow_upward, color: Colors.white),
+            )
+          : null,
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -797,229 +826,242 @@ class _BusSchedulesState extends State<BusSchedules>
           ),
         ),
       ),
-      body: _isLoading
-          ? Center(child: CircularProgressIndicator())
-          : Container(
-              color: Theme.of(context).colorScheme.primary,
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
+      body: Container(
+        color: Theme.of(context).colorScheme.primary,
+        child: SingleChildScrollView(
+          controller: scrollController,
+          physics: AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              // Modern date header (now in scrollable content)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(20),
+                color: Theme.of(context).colorScheme.primary,
                 child: Column(
                   children: [
-                    // Modern date header (now in scrollable content)
                     Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(20),
-                      color: Theme.of(context).colorScheme.primary,
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              "Live Schedules",
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            getCurrentDate(),
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            "Real-time bus schedule information",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
-                            ),
-                          ),
-                        ],
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                    ),
-
-                    // Search and Filter Section
-                    Container(
-                      color: Theme.of(context).colorScheme.primary,
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                      child: Column(
-                        children: [
-                          // Search Bar
-                          Container(
-                            child: TextField(
-                              controller: searchController,
-                              decoration: InputDecoration(
-                                hintText: 'Search destination or operator...',
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: Colors.grey,
-                                ),
-                                suffixIcon: searchQuery.isNotEmpty
-                                    ? IconButton(
-                                        icon: Icon(
-                                          Icons.clear,
-                                          color: Colors.grey,
-                                        ),
-                                        onPressed: () {
-                                          searchController.clear();
-                                        },
-                                      )
-                                    : null,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide.none,
-                                ),
-                                filled: true,
-                                fillColor: Colors.white,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: 12),
-
-                          // Filter Row
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: selectedStatusFilter,
-                                      hint: Text('Filter by Status'),
-                                      isExpanded: true,
-                                      items: availableStatuses.map((
-                                        String value,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(
-                                            value,
-                                            style: TextStyle(fontSize: 12),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          selectedStatusFilter = newValue!;
-                                        });
-                                        _applyFilters();
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<String>(
-                                      value: selectedTimeFilter,
-                                      hint: Text('Filter by Time'),
-                                      isExpanded: true,
-                                      items: availableTimeRanges.map((
-                                        String value,
-                                      ) {
-                                        return DropdownMenuItem<String>(
-                                          value: value,
-                                          child: Text(
-                                            value,
-                                            style: TextStyle(fontSize: 12),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }).toList(),
-                                      onChanged: (String? newValue) {
-                                        setState(() {
-                                          selectedTimeFilter = newValue!;
-                                        });
-                                        _applyFilters();
-                                      },
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          SizedBox(height: 8),
-
-                          // Filter Results Count and Reset Button
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Showing ${(_filteredSchedules ?? []).length} time slots',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 12,
-                                ),
-                              ),
-                              if (searchQuery.isNotEmpty ||
-                                  selectedStatusFilter != 'All Statuses' ||
-                                  selectedTimeFilter != 'All Times')
-                                TextButton(
-                                  onPressed: _resetFilters,
-                                  child: Text(
-                                    'Clear Filters',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Schedule content
-                    Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "Live Schedules",
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
                         ),
                       ),
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Column(
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      getCurrentDate(),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      "Real-time bus schedule information",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Search and Filter Section
+              Container(
+                color: Theme.of(context).colorScheme.primary,
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    // Search Bar
+                    Container(
+                      child: TextField(
+                        controller: searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Search destination or operator...',
+                          prefixIcon: Icon(Icons.search, color: Colors.grey),
+                          suffixIcon: searchQuery.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(Icons.clear, color: Colors.grey),
+                                  onPressed: () {
+                                    searchController.clear();
+                                  },
+                                )
+                              : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(height: 12),
+
+                    // Filter Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedStatusFilter,
+                                hint: Text('Filter by Status'),
+                                isExpanded: true,
+                                items: availableStatuses.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedStatusFilter = newValue!;
+                                  });
+                                  _applyFilters();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value: selectedTimeFilter,
+                                hint: Text('Filter by Time'),
+                                isExpanded: true,
+                                items: availableTimeRanges.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value,
+                                      style: TextStyle(fontSize: 12),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedTimeFilter = newValue!;
+                                  });
+                                  _applyFilters();
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: 8),
+
+                    // Filter Results Count and Reset Button
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Showing ${(_filteredSchedules ?? []).length} time slots',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 12,
+                          ),
+                        ),
+                        if (searchQuery.isNotEmpty ||
+                            selectedStatusFilter != 'All Statuses' ||
+                            selectedTimeFilter != 'All Times')
+                          TextButton(
+                            onPressed: _resetFilters,
+                            child: Text(
+                              'Clear Filters',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Schedule content
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: _isLoading
+                      ? Container(
+                          height: 200,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Loading schedules...',
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Column(
                           children: _errorMessage != null
                               ? [
                                   Container(
@@ -1060,12 +1102,12 @@ class _BusSchedulesState extends State<BusSchedules>
                                   SizedBox(height: 32),
                                 ],
                         ),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
