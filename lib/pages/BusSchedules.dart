@@ -58,6 +58,11 @@ class _BusSchedulesState extends State<BusSchedules>
     }
   }
 
+  // String formatSchedule(String s) {
+  //   // used to mimic behavior on original PITX website wherein some schedules marked as arriving are still shown
+  //   return s == "ARRIVING LATE" ? "ARRIVING" : s;
+  // }
+
   @override
   void dispose() {
     searchController.dispose();
@@ -181,9 +186,6 @@ class _BusSchedulesState extends State<BusSchedules>
   List<Map<String, dynamic>> transformApiData(List<dynamic> apiData) {
     Map<String, List<Map<String, dynamic>>> groupedByTime = {};
 
-    // Get current Manila time for filtering
-    DateTime manilaTime = _currentManilaTime;
-
     for (var item in apiData) {
       if (item is List && item.length >= 6) {
         String time = item[2] ?? ''; // Time is at index 2
@@ -201,23 +203,18 @@ class _BusSchedulesState extends State<BusSchedules>
         // Determine status based on available data
         String status = determineStatus(item);
 
-        // Check if this schedule should be included
-        bool shouldInclude = shouldIncludeSchedule(time, status, manilaTime);
+        Map<String, dynamic> schedule = {
+          'operator': operator,
+          'route': route,
+          'gate': gate,
+          'bay': bay,
+          'status': status,
+        };
 
-        if (shouldInclude) {
-          Map<String, dynamic> schedule = {
-            'operator': operator,
-            'route': route,
-            'gate': gate,
-            'bay': bay,
-            'status': status,
-          };
-
-          if (!groupedByTime.containsKey(time)) {
-            groupedByTime[time] = [];
-          }
-          groupedByTime[time]!.add(schedule);
+        if (!groupedByTime.containsKey(time)) {
+          groupedByTime[time] = [];
         }
+        groupedByTime[time]!.add(schedule);
       }
     }
 
@@ -268,30 +265,6 @@ class _BusSchedulesState extends State<BusSchedules>
     }
   }
 
-  // Helper function to determine if a schedule should be included
-  bool shouldIncludeSchedule(
-    String timeStr,
-    String status,
-    DateTime manilaTime,
-  ) {
-    try {
-      DateTime scheduledTime = parseScheduledTime(timeStr);
-
-      // Always include cancelled schedules regardless of time
-      if (['CANCELLED', 'DELAYED', 'DEPARTED'].contains(status.toUpperCase())) {
-        return true;
-      }
-
-      // For non-cancelled schedules, only include if not yet passed
-      bool hasNotPassed = scheduledTime.isAfter(manilaTime);
-
-      return hasNotPassed;
-    } catch (e) {
-      // If we can't parse the time, include it to be safe
-      return true;
-    }
-  }
-
   // Helper function to compare time strings properly
   int compareTimeStrings(String timeA, String timeB) {
     try {
@@ -320,7 +293,7 @@ class _BusSchedulesState extends State<BusSchedules>
     String status = item[17];
     if (status == "") {
       if (item[6] == "8") {
-        status = "ARRIVING";
+        status = 'ARRIVING';
       } else if (item[6] == "0") {
         status = "TBD";
       } else if (item[6] == "7") {
