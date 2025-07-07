@@ -35,6 +35,7 @@ class _BusSchedulesState extends State<BusSchedules>
     'Morning (5AM-12PM)',
     'Afternoon (12PM-6PM)',
     'Evening (6PM-12AM)',
+    'Midnight (12AM-5AM)',
   ];
 
   @override
@@ -138,6 +139,8 @@ class _BusSchedulesState extends State<BusSchedules>
           return hour >= 12 && hour < 18;
         case 'Evening (6PM-12AM)':
           return hour >= 18 && hour < 24;
+        case 'Midnight (12AM-5AM)':
+          return hour >= 0 && hour < 5;
         default:
           return true;
       }
@@ -226,9 +229,6 @@ class _BusSchedulesState extends State<BusSchedules>
       result.add({'time': time, 'schedules': schedules});
     });
 
-    // Sort by time - AM first, then PM, both in ascending order
-    result.sort((a, b) => compareTimeStrings(a['time'], b['time']));
-
     return result;
   }
 
@@ -262,30 +262,6 @@ class _BusSchedulesState extends State<BusSchedules>
       return int.parse(numbers);
     } catch (e) {
       return 0;
-    }
-  }
-
-  // Helper function to compare time strings properly
-  int compareTimeStrings(String timeA, String timeB) {
-    try {
-      // Parse both times
-      DateTime parsedTimeA = parseScheduledTime(timeA);
-      DateTime parsedTimeB = parseScheduledTime(timeB);
-
-      // Get hours in 24-hour format for comparison
-      int hourA = parsedTimeA.hour;
-      int hourB = parsedTimeB.hour;
-      int minuteA = parsedTimeA.minute;
-      int minuteB = parsedTimeB.minute;
-
-      // Create comparable values (AM times: 0-11, PM times: 12-23)
-      int comparableA = hourA * 60 + minuteA;
-      int comparableB = hourB * 60 + minuteB;
-
-      return comparableA.compareTo(comparableB);
-    } catch (e) {
-      // If parsing fails, fall back to string comparison
-      return timeA.compareTo(timeB);
     }
   }
 
