@@ -16,7 +16,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class AuthManager {
   static bool _isLoggedIn = false;
   static DateTime? _appPausedTime;
-  // static DateTime? _lastActivityTime;
   static final List<Function(bool)> _listeners = [];
 
   static bool get isLoggedIn => _isLoggedIn;
@@ -85,17 +84,9 @@ class AuthManager {
     return needsReauth;
   }
 
-  // Method to update last activity time
-  // static void updateActivity() {
-  //   if (_isLoggedIn) {
-  //     _lastActivityTime = DateTime.now();
-  //   }
-  // }
-
   // Method to reset re-authentication requirement
   static void clearReauthRequirement() {
     _appPausedTime = null;
-    // Reset any re-auth requirements - user is actively using the app
   }
 }
 
@@ -144,7 +135,6 @@ class MyApp extends StatelessWidget {
             '/profile-completion': (context) => const ProfileCompletion(),
             '/set-pin': (context) => const SetPin(),
             '/home': (context) => const Base(),
-            // '/phone-verification': (context) => const PhoneVerification(),
           },
         );
       },
