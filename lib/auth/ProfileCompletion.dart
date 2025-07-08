@@ -100,7 +100,7 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
       firstDate: DateTime(1900),
       lastDate: DateTime.now().subtract(
         Duration(days: 365 * 18),
-      ), // Minimum 16 years old
+      ), // Minimum 18 years old
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
