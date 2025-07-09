@@ -67,7 +67,7 @@ class _PhoneVerificationState extends State<PhoneVerification> {
       // Send OTP
       await supabase.auth.signInWithOtp(
         phone: number,
-        shouldCreateUser: !widget.forgotPin,
+        // shouldCreateUser: !widget.forgotPin,
       );
     } catch (e) {
       print("OTP sending failed: $e");
