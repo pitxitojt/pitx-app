@@ -72,12 +72,6 @@ class _ProfileCompletionState extends State<ProfileCompletion> {
         ),
       );
 
-      await supabase.from('notifications').insert({
-        'user_id': supabase.auth.currentUser!.id,
-        'title': 'Welcome!',
-        'body': 'Congratulations! You have successfully registered with PITX.',
-      });
-
       setState(() {
         _isLoading = false;
       });
