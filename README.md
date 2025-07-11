@@ -59,4 +59,8 @@ flutter build apk
 
    3.2. [Vonage](https://dashboard.nexmo.com/) is an alternative which, AFAIK, does not request documents. However, you would need to top up to be able to send to any number (costs 10 EUR minimum).
 
-4. There are two branches in this repo: `main` and `food`. In `main`, the food quick action redirects to the original **okpo.com/pitx** website as stated in the app guidelines (which can be found in MS Teams chat with Sir Ibarlin). In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
+4. There are two branches in this repo: `main` and `food`:
+
+   - In `main`, the food quick action redirects to the original **okpo.com/pitx** website as stated in the app guidelines (which can be found in MS Teams chat with Sir Ibarlin).
+
+   - In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
