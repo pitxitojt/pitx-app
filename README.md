@@ -1,6 +1,6 @@
 # pitx
 
-## Note: This project has yet to be tested on iOS devices as it requires a Mac to build an iOS application. [Learn more](https://docs.flutter.dev/get-started/install/macos/mobile-ios). Either get a hold of a physical Mac or rent one in the cloud.
+## Note: This project is yet to be tested on iOS devices as it requires a Mac to build an iOS application. [Learn more](https://docs.flutter.dev/get-started/install/macos/mobile-ios). Either get a hold of a physical Mac or rent one in the cloud.
 
 ## Prerequisites
 
@@ -50,7 +50,13 @@ flutter build apk
 
 ## Things to keep in mind
 
-1. The Supabase account is only in free tier. [Limitations of a free account](https://supabase.com/pricing)
-2. [Twilio](https://console.twilio.com/) requires account verification before the app is able to send messages to any number. They request documents.
-3. [Vonage](https://dashboard.nexmo.com/) is an alternative which does not request documents. However, you would need to top up to be able send to any number (costs minimum of 10 EUR).
+1. The Supabase account is limited to the free tier. [Limitations of a free account](https://supabase.com/pricing). Paying for the service will be necessary to scale the application.
+2. Mobile OTP/authentication currently only works with the OJT phone number as sending is limited only to verified numbers at the moment. Also, each mobile OTP sent costs money (the amount depends on the provider)
+
+3. Supabase currently supports both Twilio and Vonage for OTP, among others.
+
+   3.1. [Twilio](https://console.twilio.com/) requires account verification before the app is able to send messages to any number. They request documents.
+
+   3.2. [Vonage](https://dashboard.nexmo.com/) is an alternative which, AFAIK, does not request documents. However, you would need to top up to be able to send to any number (costs 10 EUR minimum).
+
 4. There are two branches in this repo: `main` and `food`. In `main`, the food quick action redirects to the original **okpo.com/pitx** website as stated in the app guidelines (which can be found in MS Teams chat with Sir Ibarlin). In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
