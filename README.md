@@ -7,7 +7,7 @@
 - Flutter
 - Android Studio (emulator for Android development). You can also use your own device for testing. [Learn more](https://docs.flutter.dev/platform-integration/android/setup#set-up-devices)
 - Supabase account
-- Twilio account
+- Twilio/Vonage account
 
 ## Note: Credentials for all accounts are in MS Teams account self chats
 
@@ -50,22 +50,22 @@ flutter build apk
 
 ## Things to keep in mind
 
-1. The Supabase account is limited to the free tier. [Limitations of a free account](https://supabase.com/pricing). Paying for the service will be necessary to scale the application.
-2. Mobile OTP/authentication currently only works with the OJT phone number as sending is limited only to verified numbers at the moment. Also, each mobile OTP sent costs money (the amount depends on the provider)
+- The Supabase account is limited to the free tier. [Limitations of a free account](https://supabase.com/pricing). Paying for the service will be necessary to scale the application.
+- Mobile OTP/authentication currently only works with the OJT phone number as sending is limited only to verified numbers at the moment. Also, each mobile OTP sent costs money (the amount depends on the provider)
 
-3. Supabase currently supports both Twilio and Vonage for OTP, among others.
+- Supabase currently supports both Twilio and Vonage for OTP, among others.
 
-   3.1. [Twilio](https://console.twilio.com/) requires account verification before the app is able to send messages to any number. They request documents.
+  - [Twilio](https://console.twilio.com/) requires account verification before the app is able to send messages to any number. They request documents.
 
-   3.2. [Vonage](https://dashboard.nexmo.com/) is an alternative which, AFAIK, does not request documents. However, you would need to top up to be able to send to any number (costs 10 EUR minimum).
+  - [Vonage](https://dashboard.nexmo.com/) is an alternative which, AFAIK, does not request documents. However, you would need to top up to be able to send to any number (costs 10 EUR minimum).
 
-4. There are two branches in this repo: `main` and `food`:
+- There are two branches in this repo: `main` and `food`:
 
-   - In `main`, the food quick action redirects to the original **okpo.com/pitx** website as stated in the app guidelines (which can be found in MS Teams chat with Sir Ibarlin).
+  - In `main`, the food quick action redirects to the original **okpo.com/pitx** website as stated in the app guidelines (which can be found in MS Teams chat with Sir Ibarlin).
 
-   - In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
+  - In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
 
-5. Phone number authentication was used primarily since it is harder to make junk phone numbers than email addresses, which reduces the chances of bots creating accounts. Feel free to add other authentication methods available in Supabase.
+- Phone number authentication was used primarily since it is harder to make junk phone numbers than email addresses, which reduces the chances of bots creating accounts. Feel free to add other authentication methods available in Supabase.
 
 ## Possible features to add
 
