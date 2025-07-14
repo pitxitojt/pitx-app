@@ -66,3 +66,10 @@ flutter build apk
    - In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
 
 5. Phone number authentication was used primarily since it is harder to make junk phone numbers than email addresses, which reduces the chances of bots creating accounts. Feel free to add other authentication methods available in Supabase.
+
+## Possible features to add
+
+- Basic analytics tracking to monitor user behavior and feature usage.
+- Push notifications for phone/email
+- App crash/bug reporting system
+- Privacy policy and terms pages

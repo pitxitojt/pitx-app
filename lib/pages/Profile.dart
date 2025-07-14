@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:pitx/main.dart';
 import 'package:pitx/pages/Settings.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'dart:io';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -12,6 +16,7 @@ class Profile extends StatefulWidget {
 
 class _ProfileState extends State<Profile> {
   late final _user;
+  String? _image = null;
 
   Future<void> _signOut() async {
     try {
@@ -20,6 +25,70 @@ class _ProfileState extends State<Profile> {
     } catch (e) {
       print("Error signing out: $e");
     }
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final fileName = supabase.auth.currentUser!.id;
+    final hasAvatar = _user.userMetadata['avatar'] != null;
+
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('Choose from gallery'),
+                onTap: () => Navigator.pop(context, 'gallery'),
+              ),
+              if (hasAvatar)
+                ListTile(
+                  leading: Icon(Icons.delete, color: Colors.red),
+                  title: Text(
+                    'Remove profile photo',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  onTap: () => Navigator.pop(context, 'remove'),
+                ),
+              ListTile(
+                leading: Icon(Icons.close),
+                title: Text('Cancel'),
+                onTap: () => Navigator.pop(context, 'cancel'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (result == 'gallery') {
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        File file = File(image.path);
+        if (hasAvatar) {
+          await supabase.storage.from('avatar').remove([fileName]);
+        }
+        await supabase.storage.from('avatar').upload(fileName, file);
+        final publicUrl = supabase.storage
+            .from('avatar')
+            .getPublicUrl(fileName);
+        await supabase.auth.updateUser(
+          UserAttributes(data: {'avatar': publicUrl}),
+        );
+        setState(() => _image = publicUrl);
+      }
+    } else if (result == 'remove' && hasAvatar) {
+      await supabase.storage.from('avatar').remove([fileName]);
+      await supabase.auth.updateUser(UserAttributes(data: {'avatar': null}));
+      setState(() => _image = null);
+    }
+    // Cancel does nothing
   }
 
   Future<void> _showLogoutConfirmation() async {
@@ -102,6 +171,7 @@ class _ProfileState extends State<Profile> {
     // Initialize any necessary data or state here
     setState(() {
       _user = supabase.auth.currentUser;
+      _image = _user.userMetadata['avatar'];
     });
   }
 
@@ -191,25 +261,33 @@ class _ProfileState extends State<Profile> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 2,
                           ),
-                        ],
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: _image != null
+                            ? CircleAvatar(
+                                radius: 40,
+                                backgroundImage: NetworkImage(_image!),
+                              )
+                            : Icon(Icons.person, size: 40, color: Colors.white),
                       ),
-                      child: Icon(Icons.person, size: 40, color: Colors.white),
                     ),
                     SizedBox(height: 16),
                     Text(
