@@ -64,3 +64,5 @@ flutter build apk
    - In `main`, the food quick action redirects to the original **okpo.com/pitx** website as stated in the app guidelines (which can be found in MS Teams chat with Sir Ibarlin).
 
    - In `food`, it redirects to **pitxfoodstaging.pitx.com.ph**, another project the previous intern was tasked to do. However, this site still needs further testing and pending payment integration.
+
+5. Phone number authentication was used primarily since it is harder to make junk phone numbers than email addresses, which reduces the chances of bots creating accounts. Feel free to add other authentication methods available in Supabase.
