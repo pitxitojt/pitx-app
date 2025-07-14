@@ -77,16 +77,17 @@ class _ProfileState extends State<Profile> {
         final publicUrl = supabase.storage
             .from('avatar')
             .getPublicUrl(fileName);
-        await supabase.auth.updateUser(
+        final u = await supabase.auth.updateUser(
           UserAttributes(data: {'avatar': publicUrl}),
         );
-        final u = await supabase.auth.getUser();
+        print(u.user);
         setState(() => _user = u.user);
       }
     } else if (result == 'remove' && hasAvatar) {
       await supabase.storage.from('avatar').remove([fileName]);
-      await supabase.auth.updateUser(UserAttributes(data: {'avatar': null}));
-      final u = await supabase.auth.getUser();
+      final u = await supabase.auth.updateUser(
+        UserAttributes(data: {'avatar': null}),
+      );
       setState(() => _user = u.user);
     }
     // Cancel does nothing
@@ -292,7 +293,10 @@ class _ProfileState extends State<Profile> {
                                   ? CircleAvatar(
                                       radius: 40,
                                       backgroundImage: NetworkImage(
-                                        _user!.userMetadata?['avatar'],
+                                        _user!.userMetadata?['avatar'] != null
+                                            ? _user!.userMetadata!['avatar'] +
+                                                  '?v=${DateTime.now().millisecondsSinceEpoch}'
+                                            : '',
                                       ),
                                     )
                                   : Icon(
