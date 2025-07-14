@@ -73,3 +73,4 @@ flutter build apk
 - Push notifications for phone/email
 - App crash/bug reporting system
 - Privacy policy and terms pages
+- Edit/update profile
