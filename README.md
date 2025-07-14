@@ -80,17 +80,21 @@ flutter build apk
 <div style="display: flex; flex-direction: column; justify-content: center; align-items: center">
 
    <div style="display: flex;">
+      <img src="screenshots/login.png" height=500px />
       <img src="screenshots/home.png" height=500px />
       <img src="screenshots/search.png" height=500px />
-      <img src="screenshots/profile.png" height=500px />
    </div>
    <div style="display: flex;">
+      <img src="screenshots/profile.png" height=500px />
       <img src="screenshots/bus_schedules.png" height=500px />
       <img src="screenshots/bus_operators.png" height=500px />
-      <img src="screenshots/food.png" height=500px />
    </div>
    <div style="display: flex;">
+      <img src="screenshots/food.png" height=500px />
+      <img src="screenshots/notifications.png" height=500px />
       <img src="screenshots/faq.png" height=500px />
+   </div>
+   <div style="display: flex;">
       <img src="screenshots/chatbot.png" height=500px />
    </div>
 </div>
