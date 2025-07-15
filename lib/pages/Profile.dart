@@ -4,7 +4,6 @@ import 'package:pitx/pages/Settings.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mime/mime.dart';
 import 'dart:io';
 
 class Profile extends StatefulWidget {
